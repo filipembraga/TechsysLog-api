@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="TechsysLog.API/TechsysLog.API.csproj" />
+  <Project Path="TechsysLog.Application/TechsysLog.Application.csproj" />
+  <Project Path="TechsysLog.CrossCutting/TechsysLog.CrossCutting.csproj" />
+  <Project Path="TechsysLog.Domain/TechsysLog.Domain.csproj" />
+  <Project Path="TechsysLog.Infrastructure/TechsysLog.Infrastructure.csproj" />
+</Solution>
