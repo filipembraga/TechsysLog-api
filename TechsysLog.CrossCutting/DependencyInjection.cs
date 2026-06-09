@@ -4,6 +4,11 @@ using Techsyslog.Infrastructure.Settings;
 using TechsysLog.Infrastructure.Context;
 using TechsysLog.Infrastructure.Repositories;
 using TechsysLog.Domain.Interfaces;
+using TechsysLog.Application.Interfaces;
+using TechsysLog.Application.Services;
+using TechsysLog.Application.Settings;
+using TechsysLog.Infrastructure.ExternalServices;
+using TechsysLog.Infrastructure.WebSockets;
 
 namespace TechsysLog.CrossCutting;
 
@@ -21,22 +26,34 @@ public static class DependencyInjection
     { 
         services.Configure<MongoDbSettings>(configuration.GetSection("MongoDb"));
         services.AddSingleton<MongoDbContext>();
+        services.AddSignalR();
+
+        services.AddHttpClient<IAddressLookupService, ViaCepClient>(client =>
+        {
+            client.BaseAddress = new Uri("https://viacep.com.br/ws/");
+        });
         
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IDeliveryRepository, DeliveryRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
-        
+        services.AddScoped<INotificationDispatcher, SignalRNotificationDispatcher>();
+              
         return services;
     }
 
     public static IServiceCollection AddApplication(
-        this IServiceCollection services)
+        this IServiceCollection services,
+        IConfiguration configuration)
     { 
-        ///services.AddScoped<IUserService, UserService>();
-        ///services.AddScoped<IOrderService, OrderService>();
-        ///services.AddScoped<IDeliveryService, DeliveryService>();
-        ///services.AddScoped<INotificationService, NotificationService>();
+        services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
+        services.AddScoped<IJwtService, JwtService>();
+
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IOrderService, OrderService>();
+        services.AddScoped<IDeliveryService, DeliveryService>();
+        services.AddScoped<INotificationService, NotificationService>();
+        
         return services;
      }
 }

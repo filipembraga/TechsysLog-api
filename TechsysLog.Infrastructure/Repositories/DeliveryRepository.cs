@@ -1,30 +1,32 @@
-namespace TechsysLog.Infrastructure.Repositories
+using MongoDB.Driver;
+using TechsysLog.Domain.Interfaces;
+using TechsysLog.Domain.Entities;
+using TechsysLog.Infrastructure.Context;
+
+namespace TechsysLog.Infrastructure.Repositories;
+
+public class DeliveryRepository : IDeliveryRepository
 {
-    using System.Linq;
-    using System.Threading.Tasks;
-    using MongoDB.Driver;
-    using TechsysLog.Domain.Interfaces;
-    using TechsysLog.Domain.Entities;
-    using TechsysLog.Infrastructure.Context;
+    private readonly IMongoCollection<Delivery> _collection;
 
-    public class DeliveryRepository : IDeliveryRepository
+    public DeliveryRepository(MongoDbContext dbContext)
     {
-        private readonly IMongoCollection<Delivery> _collection;
+        _collection = dbContext.Deliveries;
+    }
 
-        public DeliveryRepository(MongoDbContext dbContext)
-        {
-            _collection = dbContext.Deliveries;
-        }
+    public async Task CreateAsync(Delivery delivery)
+    {
+        await _collection.InsertOneAsync(delivery);
+    }
 
-        public async Task<Delivery?> GetByOrderIdAsync(string orderId)
-        {
-            var filter = Builders<Delivery>.Filter.Eq(d => d.OrderId, orderId);
-            return await _collection.Find(filter).FirstOrDefaultAsync();
-        }
+    public async Task<Delivery?> GetByOrderIdAsync(string orderId)
+    {
+        var filter = Builders<Delivery>.Filter.Eq(d => d.OrderId, orderId);
+        return await _collection.Find(filter).FirstOrDefaultAsync();
+    }
 
-        public async Task<bool> OrderAlreadyDeliveredAsync(string orderId)
-        {
-            return await _collection.Find(d => d.OrderId == orderId).AnyAsync();
-        }
+    public async Task<bool> OrderAlreadyDeliveredAsync(string orderId)
+    {
+        return await _collection.Find(d => d.OrderId == orderId).AnyAsync();
     }
 }

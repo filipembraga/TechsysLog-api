@@ -1,37 +1,42 @@
-namespace TechsysLog.Infrastructure.Repositories
+using MongoDB.Driver;
+using TechsysLog.Domain.Interfaces;
+using TechsysLog.Domain.Entities;
+using TechsysLog.Infrastructure.Context;
+
+namespace TechsysLog.Infrastructure.Repositories;
+
+
+public class NotificationRepository : INotificationRepository
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Threading.Tasks;
-    using MongoDB.Driver;
-    using TechsysLog.Domain.Interfaces;
-    using TechsysLog.Domain.Entities;
-    using TechsysLog.Infrastructure.Context;
+    private readonly IMongoCollection<Notification> _collection;
 
-    public class NotificationRepository : INotificationRepository
+    public NotificationRepository(MongoDbContext dbContext)
     {
-        private readonly IMongoCollection<Notification> _collection;
+        _collection = dbContext.Notifications;
+    }
+    public async Task CreateAsync(Notification notification)
+    {
+        await _collection.InsertOneAsync(notification);
+    }
 
-        public NotificationRepository(MongoDbContext dbContext)
-        {
-            _collection = dbContext.Notifications;
-        }
+    public async Task<List<Notification>> GetAllAsync()
+    {
+        return await _collection.Find(_ => true).ToListAsync();
+    }
 
-        public async Task<List<Notification>> GetUnreadAsync()
-        {
-            var filter = Builders<Notification>.Filter.Eq(n => n.IsRead, false);
-            return await _collection.Find(filter).ToListAsync();
-        }
+    public async Task<List<Notification>> GetUnreadAsync()
+    {
+        var filter = Builders<Notification>.Filter.Eq(n => n.IsRead, false);
+        return await _collection.Find(filter).ToListAsync();
+    }
 
-        public async Task MarkAsReadAsync(string id, string userId)
-        {
-            var filter = Builders<Notification>.Filter.Eq("Id", id);
-            var update = Builders<Notification>.Update
-                .Set(n => n.IsRead, true)
-                .Set(n => n.ReadAt, DateTime.UtcNow);
+    public async Task MarkAsReadAsync(string id, string userId)
+    {
+        var filter = Builders<Notification>.Filter.Eq("Id", id);
+        var update = Builders<Notification>.Update
+            .Set(n => n.IsRead, true)
+            .Set(n => n.ReadAt, DateTime.UtcNow);
 
-            await _collection.UpdateOneAsync(filter, update);
-        }
+        await _collection.UpdateOneAsync(filter, update);
     }
 }

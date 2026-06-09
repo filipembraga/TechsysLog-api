@@ -14,6 +14,11 @@ public class UserRepository : IUserRepository
         _collection = dbContext.Users;
     }
 
+    public async Task CreateAsync(User user)
+    {
+        await _collection.InsertOneAsync(user);
+    }
+    
     public async Task<User?> GetByEmailAsync(string email)
     {
         var filter = Builders<User>.Filter.Eq(u => u.Email, email);

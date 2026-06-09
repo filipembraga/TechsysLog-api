@@ -1,11 +1,10 @@
-namespace TechsysLog.Domain.Interfaces
-{
-    using System.Threading.Tasks;
-    using TechsysLog.Domain.Entities;
+using TechsysLog.Domain.Entities;
 
-    public interface IDeliveryRepository
-    {
-        Task<Delivery?> GetByOrderIdAsync(string orderId);
-        Task<bool> OrderAlreadyDeliveredAsync(string orderId);
-    }
+namespace TechsysLog.Domain.Interfaces;
+
+public interface IDeliveryRepository
+{
+    Task CreateAsync(Delivery delivery);
+    Task<Delivery?> GetByOrderIdAsync(string orderId);
+    Task<bool> OrderAlreadyDeliveredAsync(string orderId);
 }

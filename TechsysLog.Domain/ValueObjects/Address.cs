@@ -12,12 +12,12 @@ public sealed class Address
 {
     public string ZipCode { get; init;}
     public string Street { get; init;}
-    public int Number { get; init;}
+    public string Number { get; init;}
     public string Neighborhood { get; init;}
     public string City { get; init;}
     public string State { get; set; } = null!;
 
-    public Address(string zipCode, string street, int number, string neighborhood, string city, string state)
+    public Address(string zipCode, string street, string number, string neighborhood, string city, string state)
     {
         ZipCode = zipCode;
         Street = street;
