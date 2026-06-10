@@ -1,8 +1,8 @@
-using TechsysLog.Domain.Entities;
+using TechsysLog.Domain.ValueObjects;
 
 namespace TechsysLog.Domain.Interfaces;
 
 public interface IAddressLookupService
 {
-    Task<ViaCepResponse?> GetAddressByZipCodeAsync(string zipCode);
+    Task<Address?> GetAddressByZipCodeAsync(string zipCode);
 }

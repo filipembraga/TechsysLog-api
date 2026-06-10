@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using TechsysLog.Application.DTOs.Requests;
 using TechsysLog.Application.DTOs.Responses;
 using TechsysLog.Application.Interfaces;
@@ -27,15 +28,18 @@ public class OrderService : IOrderService
     private readonly IOrderRepository _orderRepository;
     private readonly IAddressLookupService _addressLookupService;
     private readonly INotificationService _notificationService;
+    private readonly ILogger<OrderService> _logger;
 
     public OrderService(
         IOrderRepository orderRepository,
         IAddressLookupService addressLookupService,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        ILogger<OrderService> logger)
     {
         _orderRepository = orderRepository;
         _addressLookupService = addressLookupService;
         _notificationService = notificationService;
+        _logger = logger;
     }
 
     public async Task<OrderResponseDto> CreateAsync(CreateOrderDto dto, string userId)
@@ -104,9 +108,12 @@ public class OrderService : IOrderService
                     state: viaCepAddress.State);
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // ViaCEP unavailable — fallback to user-provided data
+            // This is a non-critical failure: address enrichment is best-effort.
+            _logger.LogWarning(ex,
+                "Address lookup failed for zip code {ZipCode}. " +
+                "Falling back to user-provided address data.", dto.ZipCode); // ViaCEP unavailable — fallback to user-provided data
         }
 
         return new Address(

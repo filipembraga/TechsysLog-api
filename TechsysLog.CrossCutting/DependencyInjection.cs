@@ -30,7 +30,8 @@ public static class DependencyInjection
 
         services.AddHttpClient<IAddressLookupService, ViaCepClient>(client =>
         {
-            client.BaseAddress = new Uri("https://viacep.com.br/ws/");
+            client.BaseAddress = new Uri(configuration["ViaCep:BaseUrl"]
+                ?? "https://viacep.com.br/ws/");
         });
         
         services.AddScoped<IUserRepository, UserRepository>();
@@ -38,7 +39,7 @@ public static class DependencyInjection
         services.AddScoped<IDeliveryRepository, DeliveryRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<INotificationDispatcher, SignalRNotificationDispatcher>();
-              
+
         return services;
     }
 

@@ -5,6 +5,9 @@ using TechsysLog.Infrastructure.WebSockets.Hubs;
 
 namespace TechsysLog.Infrastructure.WebSockets;
 
+/// <summary>
+/// Implements real-time notification dispatch via SignalR.
+/// </summary>
 public class SignalRNotificationDispatcher : INotificationDispatcher
 {
     private readonly IHubContext<NotificationHub> _hubContext;
@@ -16,6 +19,12 @@ public class SignalRNotificationDispatcher : INotificationDispatcher
 
     public async Task SendNotificationAsync(Notification notification)
     {
-        await _hubContext.Clients.All.SendAsync("ReceiveNotification", notification);
+        await _hubContext.Clients.All.SendAsync("ReceiveNotification", new
+        {
+            id = notification.Id,
+            message = notification.Message,
+            orderId = notification.OrderId,
+            createdAt = notification.CreatedAt
+        });
     }
 }

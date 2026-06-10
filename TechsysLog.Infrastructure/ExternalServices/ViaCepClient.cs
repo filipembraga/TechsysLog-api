@@ -1,6 +1,6 @@
 using System.Text.Json;
-using TechsysLog.Domain.Entities;
 using TechsysLog.Domain.Interfaces;
+using TechsysLog.Domain.ValueObjects;
 
 namespace TechsysLog.Infrastructure.ExternalServices;
 
@@ -13,20 +13,30 @@ public class ViaCepClient : IAddressLookupService
         _httpClient = httpClient;
     }
 
-    public async Task<ViaCepResponse?> GetAddressByZipCodeAsync(string zipCode)
+    // <summary>
+    /// HTTP client implementation for the ViaCEP public API.
+    /// Maps the provider-specific response to the domain-neutral AddressLookupResult.
+    /// </summary
+    public async Task<Address?> GetAddressByZipCodeAsync(string zipCode)
     {
         var cleanZipCode = zipCode.Replace("-", "").Trim();
-        var url = $"https://viacep.com.br/ws/{cleanZipCode}/json/";
-        var response = await _httpClient.GetAsync(url);
+        var response = await _httpClient.GetAsync($"{cleanZipCode}/json/");
 
         if (!response.IsSuccessStatusCode) return null;
 
         var content = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<ViaCepResponse>(content);
+        var result = JsonSerializer.Deserialize<ViaCepResponseDto>(content);
 
-        if (result is null || result.Error)
+        if (result is null || result.Erro)
             return null;
-            
-        return result;
+
+        return new Address(
+             zipCode: result.Cep,
+             street: result.Logradouro,
+             number: string.Empty, // ViaCEP does not provide street number information
+             neighborhood: result.Bairro,
+             city: result.Localidade,
+             state: result.Uf
+        );
     }
 }
