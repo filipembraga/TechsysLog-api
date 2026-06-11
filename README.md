@@ -308,8 +308,7 @@ O coverage é gerado automaticamente em `coverage.cobertura.xml` na raiz do proj
 2. `Cmd+Shift+P` → `Coverage Gutters: Watch`
 3. As linhas cobertas/não cobertas aparecem no gutter de qualquer arquivo `.cs` aberto
 
-<details>
-<summary><strong>### Qualidade: cobertura de testes, estratégia e confiabilidade</strong></summary>
+### Qualidade:
 
 | | |
 |---|---|
@@ -318,16 +317,6 @@ O coverage é gerado automaticamente em `coverage.cobertura.xml` na raiz do proj
 | Cobertura — API (linha) | 100% |
 | Cobertura — Domain (linha) | 100% |
 | Stack de testes | xUnit + Moq + FluentAssertions |
-
-### Cobertura por camada
-
-| Camada | Linha | Branch | Método | Observação |
-|--------|-------|--------|--------|------------|
-| Application | 98.2% | 95.5% | 95.7% | Services — core do negócio |
-| API | 100% | 93.8% | 100% | Controllers + `ExceptionHandlingMiddleware` |
-| Domain | 100% | 100% | 100% | Entidades e `Address` value object |
-| Infrastructure | excluída | — | — | Candidata a testes de integração |
-| CrossCutting | excluída | — | — | DI composition root — sem lógica testável |
 
 ### Confiabilidade e Estratégia de Testes
 
@@ -339,11 +328,11 @@ O estudo demonstra que falhas no tratamento de erros estão entre as principais 
 
 Por esse motivo, todas as ramificações de exceção do middleware possuem cobertura automatizada, validando:
 
-mapeamento correto para os respectivos códigos HTTP;
-respostas seguras para o cliente;
-ausência de vazamento de detalhes internos da aplicação;
-registro obrigatório dos erros em log;
-preservação do fluxo normal de execução (happy path).
+- mapeamento correto para os respectivos códigos HTTP;
+- respostas seguras para o cliente;
+- ausência de vazamento de detalhes internos da aplicação;
+- registro obrigatório dos erros em log;
+- preservação do fluxo normal de execução (happy path).
 
 O objetivo não é apenas aumentar métricas de cobertura, mas reduzir riscos associados ao tratamento incorreto de falhas, reforçando requisitos de confiabilidade, observabilidade e segurança.
 
@@ -354,8 +343,17 @@ O objetivo não é apenas aumentar métricas de cobertura, mas reduzir riscos as
 | Builder pattern | `UserBuilder`, `OrderBuilder`, `NotificationBuilder` — dados de teste consistentes sem repetição |
 | Infrastructure | Não coberta por testes unitários — repositórios são mais adequados para testes de integração contra banco real |
 
+### Cobertura por camada
+
+| Camada | Linha | Branch | Método | Observação |
+|--------|-------|--------|--------|------------|
+| Application | 98.2% | 95.5% | 95.7% | Services — core do negócio |
+| API | 100% | 93.8% | 100% | Controllers + `ExceptionHandlingMiddleware` |
+| Domain | 100% | 100% | 100% | Entidades e `Address` value object |
+| Infrastructure | excluída | — | — | Candidata a testes de integração |
+| CrossCutting | excluída | — | — | DI composition root — sem lógica testável |
+
 ---
-<details>
 
 ## Observabilidade
 
