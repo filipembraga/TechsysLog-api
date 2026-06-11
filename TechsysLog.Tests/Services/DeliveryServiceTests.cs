@@ -145,4 +145,52 @@ public class DeliveryServiceTests
         // Assert — user-provided date is respected
         result.DeliveredAt.Should().Be(specificDate);
     }
+
+    [Fact]
+    public async Task RegisterAsync_WhenDeliveryRecordAlreadyExists_ThrowsInvalidOperationException()
+    {
+        // Covers the secondary duplicate guard: order status is Pending but a delivery
+        // record already exists in the database. Both guards must be independent.
+        var order = new OrderBuilder().WithStatus(OrderStatus.Pending).Build();
+        _orderRepositoryMock.Setup(r => r.GetByIdAsync(order.Id)).ReturnsAsync(order);
+        _deliveryRepositoryMock.Setup(r => r.OrderAlreadyDeliveredAsync(order.Id)).ReturnsAsync(true);
+
+        var act = async () => await _sut.RegisterAsync(new CreateDeliveryDto { OrderId = order.Id });
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage($"*{order.OrderNumber}*");
+    }
+
+    [Fact]
+    public async Task GetByOrderIdAsync_WhenDeliveryExists_ReturnsMappedDto()
+    {
+        // Arrange
+        var delivery = new Domain.Entities.Delivery
+        {
+            Id = "deliveryid",
+            OrderId = "orderid",
+            DeliveryDate = new DateTime(2026, 6, 11, 10, 0, 0, DateTimeKind.Utc)
+        };
+        _deliveryRepositoryMock.Setup(r => r.GetByOrderIdAsync("orderid")).ReturnsAsync(delivery);
+
+        // Act
+        var result = await _sut.GetByOrderIdAsync("orderid");
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Id.Should().Be("deliveryid");
+        result.OrderId.Should().Be("orderid");
+        result.DeliveredAt.Should().Be(delivery.DeliveryDate);
+    }
+
+    [Fact]
+    public async Task GetByOrderIdAsync_WhenDeliveryNotFound_ReturnsNull()
+    {
+        _deliveryRepositoryMock.Setup(r => r.GetByOrderIdAsync(It.IsAny<string>()))
+            .ReturnsAsync((Domain.Entities.Delivery?)null);
+
+        var result = await _sut.GetByOrderIdAsync("nonexistentorderid");
+
+        result.Should().BeNull();
+    }
 }

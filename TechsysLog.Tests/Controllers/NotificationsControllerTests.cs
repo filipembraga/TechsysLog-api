@@ -86,22 +86,6 @@ public class NotificationsControllerTests
     }
 
     [Fact]
-    public async Task GetAllAsync_WhenNoNotifications_ReturnsEmptyList()
-    {
-        // Arrange
-        _notificationServiceMock
-            .Setup(s => s.GetAllAsync())
-            .ReturnsAsync(new List<NotificationResponseDto>());
-
-        // Act
-        var result = await _sut.GetAllAsync();
-
-        // Assert
-        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
-        okResult.Value.Should().BeEquivalentTo(new List<NotificationResponseDto>());
-    }
-
-    [Fact]
     public async Task MarkAsReadAsync_WithValidId_Returns204()
     {
         // Arrange

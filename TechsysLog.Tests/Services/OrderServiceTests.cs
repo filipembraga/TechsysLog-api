@@ -6,6 +6,7 @@ using TechsysLog.Application.Interfaces;
 using TechsysLog.Application.Services;
 using TechsysLog.Domain.Interfaces;
 using TechsysLog.Domain.ValueObjects;
+using TechsysLog.Tests.Builders;
 
 namespace TechsysLog.Tests.Services;
 
@@ -161,15 +162,36 @@ public class OrderServiceTests
     [Fact]
     public async Task GetByIdAsync_WithNonExistentId_ReturnsNull()
     {
-        // Arrange
         _orderRepositoryMock
             .Setup(r => r.GetByIdAsync(It.IsAny<string>()))
             .ReturnsAsync((Domain.Entities.Order?)null);
 
-        // Act
         var result = await _sut.GetByIdAsync("nonexistentid");
 
-        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetByOrderNumberAsync_WithExistingOrderNumber_ReturnsMappedDto()
+    {
+        var order = new OrderBuilder().WithOrderNumber("ORD-00042").Build();
+        _orderRepositoryMock.Setup(r => r.GetByOrderNumberAsync("ORD-00042")).ReturnsAsync(order);
+
+        var result = await _sut.GetByOrderNumberAsync("ORD-00042");
+
+        result.Should().NotBeNull();
+        result!.OrderNumber.Should().Be("ORD-00042");
+    }
+
+    [Fact]
+    public async Task GetByOrderNumberAsync_WithNonExistentOrderNumber_ReturnsNull()
+    {
+        _orderRepositoryMock
+            .Setup(r => r.GetByOrderNumberAsync(It.IsAny<string>()))
+            .ReturnsAsync((Domain.Entities.Order?)null);
+
+        var result = await _sut.GetByOrderNumberAsync("ORD-99999");
+
         result.Should().BeNull();
     }
 }

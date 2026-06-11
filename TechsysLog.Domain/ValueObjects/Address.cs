@@ -27,30 +27,4 @@ public sealed class Address
         State = state;
     }
 
-    /// <summary>
-    /// Equality is based on data, not reference.
-    /// Two addresses with the same fields are the same address.
-    /// <param name="obj">The object to compare with the current address.</param>
-    /// </summary>
-    public override bool Equals(object? obj)
-    {
-        if (obj is not Address other)
-            return false;
-
-        return ZipCode == other.ZipCode &&
-               Street == other.Street &&
-               Number == other.Number &&
-               Neighborhood == other.Neighborhood &&
-               City == other.City &&
-               State == other.State;
-    }
-
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(ZipCode, Street, Number, Neighborhood, City, State);
-    }
-
-    public static bool operator ==(Address? left, Address? right) => Equals(left, right);
-
-    public static bool operator !=(Address? left, Address? right) => !Equals(left, right);
 }

@@ -118,4 +118,51 @@ public class OrdersControllerTests
         var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
         okResult.Value.Should().BeEquivalentTo(orders);
     }
+
+    [Fact]
+    public async Task GetByIdAsync_WithExistingId_Returns200WithOrder()
+    {
+        // Arrange
+        var order = new OrderResponseDto { Id = "existingid", OrderNumber = "ORD-00001" };
+        _orderServiceMock.Setup(s => s.GetByIdAsync("existingid")).ReturnsAsync(order);
+
+        // Act
+        var result = await _sut.GetByIdAsync("existingid");
+
+        // Assert
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.StatusCode.Should().Be(200);
+        okResult.Value.Should().BeEquivalentTo(order);
+    }
+
+    [Fact]
+    public async Task GetByOrderNumberAsync_WithExistingOrderNumber_Returns200WithOrder()
+    {
+        // Arrange
+        var order = new OrderResponseDto { Id = "id1", OrderNumber = "ORD-00001" };
+        _orderServiceMock.Setup(s => s.GetByOrderNumberAsync("ORD-00001")).ReturnsAsync(order);
+
+        // Act
+        var result = await _sut.GetByOrderNumberAsync("ORD-00001");
+
+        // Assert
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.StatusCode.Should().Be(200);
+        okResult.Value.Should().BeEquivalentTo(order);
+    }
+
+    [Fact]
+    public async Task GetByOrderNumberAsync_WithNonExistentOrderNumber_Returns404()
+    {
+        // Arrange
+        _orderServiceMock.Setup(s => s.GetByOrderNumberAsync(It.IsAny<string>()))
+            .ReturnsAsync((OrderResponseDto?)null);
+
+        // Act
+        var result = await _sut.GetByOrderNumberAsync("ORD-99999");
+
+        // Assert
+        result.Should().BeOfType<NotFoundObjectResult>()
+            .Which.StatusCode.Should().Be(404);
+    }
 }
