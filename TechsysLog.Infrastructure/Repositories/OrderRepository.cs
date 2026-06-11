@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using TechsysLog.Domain.Entities;
@@ -7,6 +8,7 @@ using TechsysLog.Infrastructure.Context;
 
 namespace TechsysLog.Infrastructure.Repositories;
 
+[ExcludeFromCodeCoverage]
 /// Design decision: a generic BaseRepository<T> was considered but rejected.
 /// Each repository only implements the methods its entity actually needs.
 public class OrderRepository : IOrderRepository

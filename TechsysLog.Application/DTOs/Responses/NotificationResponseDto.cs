@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace TechsysLog.Application.DTOs.Responses;
 
+[ExcludeFromCodeCoverage]
 public class NotificationResponseDto
 {
     public string Id { get; set; } = string.Empty;

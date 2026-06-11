@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using MongoDB.Driver;
 using TechsysLog.Domain.Entities;
 using TechsysLog.Domain.Interfaces;
@@ -5,6 +6,7 @@ using TechsysLog.Infrastructure.Context;
 
 namespace TechsysLog.Infrastructure.Repositories;
 
+[ExcludeFromCodeCoverage]
 public class UserRepository : IUserRepository
 {
     private readonly IMongoCollection<User> _collection;

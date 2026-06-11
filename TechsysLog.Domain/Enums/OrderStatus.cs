@@ -1,3 +1,4 @@
+
 namespace TechsysLog.Domain.Enums;
 
 public enum OrderStatus

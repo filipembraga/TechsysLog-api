@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace TechsysLog.Application.DTOs.Requests;
 
 /// <summary>
@@ -8,6 +10,7 @@ namespace TechsysLog.Application.DTOs.Requests;
 /// This prevents client-side clock manipulation while still allowing
 /// back-dated registrations when necessary.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class CreateDeliveryDto
 {
     public string OrderId { get; set; } = string.Empty;

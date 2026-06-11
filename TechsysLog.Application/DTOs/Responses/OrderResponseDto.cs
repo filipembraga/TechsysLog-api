@@ -1,8 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
 using TechsysLog.Application.DTOs.Requests;
 using TechsysLog.Domain.Enums;
 
 namespace TechsysLog.Application.DTOs.Responses;
 
+[ExcludeFromCodeCoverage]
 public class OrderResponseDto
 {
     public string Id { get; set; } = string.Empty;

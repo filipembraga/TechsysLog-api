@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace TechsysLog.Application.DTOs.Requests;
 
+[ExcludeFromCodeCoverage]
 public class CreateUserDto
 {
     public string Name { get; set; } = string.Empty;

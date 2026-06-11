@@ -1,3 +1,4 @@
+
 namespace TechsysLog.Application.Interfaces;
 
 /// <summary>

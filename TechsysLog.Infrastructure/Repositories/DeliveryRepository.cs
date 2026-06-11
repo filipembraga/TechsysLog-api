@@ -2,9 +2,11 @@ using MongoDB.Driver;
 using TechsysLog.Domain.Interfaces;
 using TechsysLog.Domain.Entities;
 using TechsysLog.Infrastructure.Context;
+using System.Diagnostics.CodeAnalysis;
 
 namespace TechsysLog.Infrastructure.Repositories;
 
+[ExcludeFromCodeCoverage]
 public class DeliveryRepository : IDeliveryRepository
 {
     private readonly IMongoCollection<Delivery> _collection;

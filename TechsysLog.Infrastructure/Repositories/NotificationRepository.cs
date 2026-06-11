@@ -2,10 +2,11 @@ using MongoDB.Driver;
 using TechsysLog.Domain.Interfaces;
 using TechsysLog.Domain.Entities;
 using TechsysLog.Infrastructure.Context;
+using System.Diagnostics.CodeAnalysis;
 
 namespace TechsysLog.Infrastructure.Repositories;
 
-
+[ExcludeFromCodeCoverage]
 public class NotificationRepository : INotificationRepository
 {
     private readonly IMongoCollection<Notification> _collection;

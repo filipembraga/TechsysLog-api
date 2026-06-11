@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Techsyslog.Infrastructure.Settings;
@@ -18,6 +19,7 @@ namespace TechsysLog.CrossCutting;
 /// This class is the only place in the solution aware of all concrete
 /// implementations, keeping the API layer decoupled from infrastructure details.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(

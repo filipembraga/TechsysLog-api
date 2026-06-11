@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace TechsysLog.Application.Settings;
 
 /// <summary>
@@ -5,6 +7,7 @@ namespace TechsysLog.Application.Settings;
 /// Design decision: JwtSettings lives in the Application layer rather than
 /// Infrastructure because JWT token generation is an application concern —
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class JwtSettings
 {
     public string Secret { get; set; } = string.Empty;

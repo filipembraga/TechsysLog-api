@@ -4,4 +4,5 @@
   <Project Path="TechsysLog.CrossCutting/TechsysLog.CrossCutting.csproj" />
   <Project Path="TechsysLog.Domain/TechsysLog.Domain.csproj" />
   <Project Path="TechsysLog.Infrastructure/TechsysLog.Infrastructure.csproj" />
+  <Project Path="TechsysLog.Tests/TechsysLog.Tests.csproj" />
 </Solution>

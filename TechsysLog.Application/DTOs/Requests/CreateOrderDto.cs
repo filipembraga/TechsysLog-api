@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace TechsysLog.Application.DTOs.Requests;
 
+[ExcludeFromCodeCoverage]
 public class CreateOrderDto
 {
     public string Description { get; set; } = string.Empty;

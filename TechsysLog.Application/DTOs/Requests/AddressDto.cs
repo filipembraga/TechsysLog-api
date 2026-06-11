@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace TechsysLog.Application.DTOs.Requests;
 
+[ExcludeFromCodeCoverage]
 public class AddressDto
 {
     public string ZipCode { get; set; } = string.Empty;
