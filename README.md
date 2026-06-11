@@ -59,7 +59,8 @@ O projeto foi construído seguindo os princípios de **Clean Architecture** com 
 
 > Architecture Decision Records (ADRs) documentam as decisões técnicas relevantes, seu contexto e consequências. O formato segue a proposta de [Michael Nygard](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions).
 
-### ADR-001 — MongoDB sobre SQL
+<details>
+<summary><strong>### ADR-001 — MongoDB sobre SQL</strong></summary>
 
 **Status:** Aceito
 
@@ -77,8 +78,10 @@ Usar MongoDB com `MongoDB.Driver` diretamente, sem a camada de abstração do EF
 − Equipes familiarizadas apenas com SQL têm curva de aprendizado maior
 
 ---
+</details>
 
-### ADR-002 — SignalR sobre polling
+<details>
+<summary><strong>### ADR-002 — SignalR sobre polling</strong></summary>
 
 **Status:** Aceito
 
@@ -95,8 +98,10 @@ Usar SignalR com WebSockets como transporte primário. A abstração `INotificat
 − Broadcast para todos os clientes conectados neste escopo — evolução natural seria SignalR Groups para targeting por usuário
 
 ---
+</details>
 
-### ADR-003 — Número de pedido sequencial sobre GUID
+<details>
+<summary><strong>### ADR-003 — Número de pedido sequencial sobre GUID</strong></summary>
 
 **Status:** Aceito
 
@@ -112,8 +117,10 @@ Números de pedido no formato `ORD-00001` gerados sequencialmente via `CountAsyn
 − Em cenário de alta concorrência, `CountAsync() + 1` pode gerar colisões — a solução correta seria um counter atômico via `$inc` no MongoDB ou sequence generator dedicado
 
 ---
+</details>
 
-### ADR-004 — CQRS rejeitado
+<details>
+<summary><strong>### ADR-004 — CQRS rejeitado</strong></summary>
 
 **Status:** Rejeitado
 
@@ -129,6 +136,7 @@ CQRS não foi implementado. Os métodos de serviço atuais são simples o sufici
 − Se os modelos de leitura e escrita divergirem significativamente em uma evolução futura, refatorar para CQRS exigirá mais esforço do que adotá-lo desde o início
 
 ---
+</details>
 
 ## Diagrama C4
 
@@ -300,7 +308,8 @@ O coverage é gerado automaticamente em `coverage.cobertura.xml` na raiz do proj
 2. `Cmd+Shift+P` → `Coverage Gutters: Watch`
 3. As linhas cobertas/não cobertas aparecem no gutter de qualquer arquivo `.cs` aberto
 
-### Qualidade
+<details>
+<summary><strong>### Qualidade: cobertura de testes, estratégia e confiabilidade</strong></summary>
 
 | | |
 |---|---|
@@ -320,7 +329,23 @@ O coverage é gerado automaticamente em `coverage.cobertura.xml` na raiz do proj
 | Infrastructure | excluída | — | — | Candidata a testes de integração |
 | CrossCutting | excluída | — | — | DI composition root — sem lógica testável |
 
-### Estratégia de testes
+### Confiabilidade e Estratégia de Testes
+
+O middleware global de tratamento de exceções foi testado intencionalmente com base nas ideias discutidas no artigo:
+
+Yuan et al. — "Simple Testing Can Prevent Most Critical Failures"
+
+O estudo demonstra que falhas no tratamento de erros estão entre as principais causas de incidentes catastróficos em sistemas de software.
+
+Por esse motivo, todas as ramificações de exceção do middleware possuem cobertura automatizada, validando:
+
+mapeamento correto para os respectivos códigos HTTP;
+respostas seguras para o cliente;
+ausência de vazamento de detalhes internos da aplicação;
+registro obrigatório dos erros em log;
+preservação do fluxo normal de execução (happy path).
+
+O objetivo não é apenas aumentar métricas de cobertura, mas reduzir riscos associados ao tratamento incorreto de falhas, reforçando requisitos de confiabilidade, observabilidade e segurança.
 
 | Camada | Abordagem |
 |--------|-----------|
@@ -330,6 +355,7 @@ O coverage é gerado automaticamente em `coverage.cobertura.xml` na raiz do proj
 | Infrastructure | Não coberta por testes unitários — repositórios são mais adequados para testes de integração contra banco real |
 
 ---
+<details>
 
 ## Observabilidade
 
