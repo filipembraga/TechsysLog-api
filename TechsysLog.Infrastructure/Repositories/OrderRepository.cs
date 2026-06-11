@@ -1,3 +1,4 @@
+using MongoDB.Bson;
 using MongoDB.Driver;
 using TechsysLog.Domain.Entities;
 using TechsysLog.Domain.Enums;
@@ -24,7 +25,7 @@ public class OrderRepository : IOrderRepository
 
     public async Task<Order?> GetByIdAsync(string id)
     {
-        var filter = Builders<Order>.Filter.Eq("_id", id);
+        var filter = Builders<Order>.Filter.Eq(o => o.Id, id);
         return await _collection.Find(filter).FirstOrDefaultAsync();
     }
 
@@ -42,7 +43,7 @@ public class OrderRepository : IOrderRepository
 
     public async Task UpdateStatusAsync(string id, OrderStatus status)
     {
-        var filter = Builders<Order>.Filter.Eq("_id", id);
+        var filter = Builders<Order>.Filter.Eq(o => o.Id, id);
         var update = Builders<Order>.Update.Set(o => o.Status, status);
         await _collection.UpdateOneAsync(filter, update);
     }

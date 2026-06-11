@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using TechsysLog.API.Middleware;
 using TechsysLog.Application.Settings;
@@ -16,6 +17,19 @@ builder.Services.AddOpenApi("v1", options =>
         document.Info.Title = "TechsysLog API";
         document.Info.Version = "v1";
         document.Info.Description = "Order and delivery management system";
+
+        var securityScheme = new OpenApiSecurityScheme
+        {
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            Description = "Enter your JWT token."
+        };
+        
+        document.Components ??= new OpenApiComponents();
+        document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+        document.Components.SecuritySchemes.TryAdd("Bearer", securityScheme);
+        
         return Task.CompletedTask;
     });
 });

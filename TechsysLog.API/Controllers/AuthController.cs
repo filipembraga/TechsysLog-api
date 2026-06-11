@@ -33,7 +33,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> RegisterAsync([FromBody] CreateUserDto dto)
     {
         var user = await _userService.RegisterAsync(dto);
-        return CreatedAtAction(nameof(RegisterAsync), new { id = user.Id }, user);
+        return Created(string.Empty, user);
     }
 
     /// <summary>

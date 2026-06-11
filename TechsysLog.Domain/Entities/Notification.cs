@@ -11,6 +11,7 @@ public class Notification
     public string Message { get; set; } = null!;
     public string OrderId { get; set; } = null!;
     public bool IsRead { get; set; }
+    public string UserId {get; set;} = string.Empty;
     public DateTime ReadAt { get; set; }
     public DateTime CreatedAt { get; set; }
 }

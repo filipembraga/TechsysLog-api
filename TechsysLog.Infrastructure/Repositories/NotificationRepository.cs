@@ -32,10 +32,11 @@ public class NotificationRepository : INotificationRepository
 
     public async Task MarkAsReadAsync(string id, string userId)
     {
-        var filter = Builders<Notification>.Filter.Eq("Id", id);
+        var filter = Builders<Notification>.Filter.Eq(o => o.Id, id);
         var update = Builders<Notification>.Update
             .Set(n => n.IsRead, true)
-            .Set(n => n.ReadAt, DateTime.UtcNow);
+            .Set(n => n.ReadAt, DateTime.UtcNow)
+            .Set(n => n.UserId, userId );
 
         await _collection.UpdateOneAsync(filter, update);
     }

@@ -40,7 +40,7 @@ public class OrdersController : ControllerBase
         var userId = GetUserId();
         var order = await _orderService.CreateAsync(dto, userId);
 
-        return CreatedAtAction(nameof(GetByIdAsync), new { id = order.Id }, order);
+        return CreatedAtAction("GetById", new { id = order.Id }, order);
     }
 
     /// <summary>

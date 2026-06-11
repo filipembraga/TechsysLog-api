@@ -40,7 +40,7 @@ public class DeliveriesController : ControllerBase
     public async Task<IActionResult> RegisterAsync([FromBody] CreateDeliveryDto dto)
     {
         var delivery = await _deliveryService.RegisterAsync(dto);
-        return CreatedAtAction(nameof(GetByOrderIdAsync), new { orderId = delivery.OrderId }, delivery);
+        return CreatedAtAction("GetByOrderId", new { orderId = delivery.OrderId }, delivery);
     }
 
     /// <summary>
