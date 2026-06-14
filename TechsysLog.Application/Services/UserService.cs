@@ -49,7 +49,7 @@ public class UserService : IUserService
         return MapToResponse(user); // MapToResponse produces a safe DTO with only public fields.
     }
 
-    public async Task<string> LoginAsync(LoginDto dto)
+    public async Task<LoginResponseDto> LoginAsync(LoginDto dto)
     {
         var user = await _userRepository.GetByEmailAsync(dto.Email);
 
@@ -57,7 +57,12 @@ public class UserService : IUserService
         if (user is null || !BC.Verify(dto.Password, user.PasswordHash))
             throw new UnauthorizedAccessException("Invalid email or password.");
 
-        return _jwtService.GenerateToken(user.Id, user.Email);
+        var token = _jwtService.GenerateToken(user.Id, user.Email);
+        return new LoginResponseDto
+        {
+            Token = token,
+            User = MapToResponse(user)
+        };
     }
 
     private static UserResponseDto MapToResponse(User user) => new()

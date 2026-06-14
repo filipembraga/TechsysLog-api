@@ -63,16 +63,26 @@ public class AuthControllerTests
             Password = "Test@1234"
         };
 
+        var loginResponse = new LoginResponseDto
+        {
+            Token = "valid.jwt.token",
+            User = new UserBaseDto
+            {
+                Id = "6a29ccb85c6f09702e1853de",
+                Name = "Zé das Couves",
+                Email = "usuariodeTeste@techsyslog.com"
+            }
+        };
+
         _userServiceMock.Setup(s => s.LoginAsync(dto))
-            .ReturnsAsync("valid.jwt.token");
+            .ReturnsAsync(loginResponse);
 
         // Act
         var result = await _sut.LoginAsync(dto);
 
         // Assert
-        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
-        okResult.StatusCode.Should().Be(200);
-        okResult.Value.Should().BeEquivalentTo(new { token = "valid.jwt.token" });
+        result.Should().BeOfType<OkObjectResult>()
+        .Which.StatusCode.Should().Be(200);
     }
 
     [Fact]

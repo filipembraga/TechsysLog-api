@@ -6,5 +6,5 @@ namespace TechsysLog.Application.Interfaces;
 public interface IUserService
 {
     Task<UserResponseDto> RegisterAsync(CreateUserDto dto);
-    Task<string> LoginAsync(LoginDto dto);
+    Task<LoginResponseDto> LoginAsync(LoginDto dto);
 }

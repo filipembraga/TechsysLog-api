@@ -43,11 +43,11 @@ public class AuthController : ControllerBase
     /// <response code="200">Authentication successful, token returned</response>
     /// <response code="401">Invalid email or password</response>
     [HttpPost("login")]
-    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> LoginAsync([FromBody] LoginDto dto)
     {
-        var token = await _userService.LoginAsync(dto);
-        return Ok(new { token });
+        var loginResponse = await _userService.LoginAsync(dto);
+        return Ok(loginResponse);
     }
 }

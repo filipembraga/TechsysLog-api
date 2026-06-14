@@ -39,7 +39,6 @@ builder.Services
     .AddInfrastructure(builder.Configuration)
     .AddApplication(builder.Configuration);
     
-
 builder.Services.AddEndpointsApiExplorer();
 
 var jwtSettings = builder.Configuration
@@ -85,6 +84,12 @@ builder.Services
 builder.Services.AddAuthorization();
 builder.Services.AddSignalR();
 
+builder.Services.AddCors(options =>
+    options.AddPolicy("Frontend", p =>
+        p.WithOrigins("http://localhost:3000")
+         .AllowAnyHeader().AllowAnyMethod()
+         .AllowCredentials())); 
+
 var app = builder.Build();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -101,6 +106,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("Frontend");
 app.UseAuthentication();
 app.UseAuthorization();
 

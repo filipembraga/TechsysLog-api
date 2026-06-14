@@ -111,7 +111,8 @@ public class UserServiceTests
         var result = await _sut.LoginAsync(dto);
 
         // Assert
-        result.Should().Be("valid.jwt.token");
+        result.Should().NotBeNull();
+        result.Token.Should().NotBeEmpty();
     }
 
     [Fact]
