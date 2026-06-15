@@ -47,7 +47,7 @@ public class DeliveryServiceTests
             .Returns(Task.CompletedTask);
         _orderRepositoryMock.Setup(r => r.UpdateStatusAsync(order.Id, OrderStatus.Delivered))
             .Returns(Task.CompletedTask);
-        _notificationServiceMock.Setup(n => n.SendAsync(It.IsAny<string>(), It.IsAny<string>()))
+        _notificationServiceMock.Setup(n => n.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NotificationType>()))
             .Returns(Task.CompletedTask);
 
         // Act
@@ -110,7 +110,7 @@ public class DeliveryServiceTests
             .Returns(Task.CompletedTask);
         _orderRepositoryMock.Setup(r => r.UpdateStatusAsync(It.IsAny<string>(), It.IsAny<OrderStatus>()))
             .Returns(Task.CompletedTask);
-        _notificationServiceMock.Setup(n => n.SendAsync(It.IsAny<string>(), It.IsAny<string>()))
+        _notificationServiceMock.Setup(n => n.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NotificationType>()))
             .Returns(Task.CompletedTask);
 
         // Act
@@ -136,7 +136,7 @@ public class DeliveryServiceTests
             .Returns(Task.CompletedTask);
         _orderRepositoryMock.Setup(r => r.UpdateStatusAsync(It.IsAny<string>(), It.IsAny<OrderStatus>()))
             .Returns(Task.CompletedTask);
-        _notificationServiceMock.Setup(n => n.SendAsync(It.IsAny<string>(), It.IsAny<string>()))
+        _notificationServiceMock.Setup(n => n.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NotificationType>()))
             .Returns(Task.CompletedTask);
 
         // Act

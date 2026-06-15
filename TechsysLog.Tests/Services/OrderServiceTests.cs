@@ -4,6 +4,7 @@ using Moq;
 using TechsysLog.Application.DTOs.Requests;
 using TechsysLog.Application.Interfaces;
 using TechsysLog.Application.Services;
+using TechsysLog.Domain.Enums;
 using TechsysLog.Domain.Interfaces;
 using TechsysLog.Domain.ValueObjects;
 using TechsysLog.Tests.Builders;
@@ -71,7 +72,7 @@ public class OrderServiceTests
             .Returns(Task.CompletedTask);
 
         _notificationServiceMock
-            .Setup(n => n.SendAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Setup(n => n.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NotificationType>()))
             .Returns(Task.CompletedTask);
 
         // Act
@@ -112,7 +113,7 @@ public class OrderServiceTests
         _orderRepositoryMock.Setup(r => r.CountAsync()).ReturnsAsync(0);
         _orderRepositoryMock.Setup(r => r.CreateAsync(It.IsAny<Domain.Entities.Order>()))
             .Returns(Task.CompletedTask);
-        _notificationServiceMock.Setup(n => n.SendAsync(It.IsAny<string>(), It.IsAny<string>()))
+        _notificationServiceMock.Setup(n => n.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NotificationType>()))
             .Returns(Task.CompletedTask);
 
         // Act
@@ -145,7 +146,7 @@ public class OrderServiceTests
         _orderRepositoryMock.Setup(r => r.CountAsync()).ReturnsAsync(4);
         _orderRepositoryMock.Setup(r => r.CreateAsync(It.IsAny<Domain.Entities.Order>()))
             .Returns(Task.CompletedTask);
-        _notificationServiceMock.Setup(n => n.SendAsync(It.IsAny<string>(), It.IsAny<string>()))
+        _notificationServiceMock.Setup(n => n.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NotificationType>()))
             .Returns(Task.CompletedTask);
 
         // Act
@@ -155,7 +156,8 @@ public class OrderServiceTests
         _notificationServiceMock.Verify(
             n => n.SendAsync(
                 It.Is<string>(m => m.Contains("ORD-00005")),
-                It.IsAny<string>()),
+                It.IsAny<string>(),
+                It.IsAny<NotificationType>()),
             Times.Once);
     }
 

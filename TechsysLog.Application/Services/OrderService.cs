@@ -64,7 +64,8 @@ public class OrderService : IOrderService
 
         await _notificationService.SendAsync(
             $"New order {orderNumber} registered.",
-            order.Id);
+            order.Id,
+            NotificationType.OrderRegistered);
 
         return MapToResponse(order);
     }

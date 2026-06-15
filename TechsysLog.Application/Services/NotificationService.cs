@@ -1,7 +1,7 @@
-using Microsoft.AspNetCore.SignalR;
 using TechsysLog.Application.DTOs.Responses;
 using TechsysLog.Application.Interfaces;
 using TechsysLog.Domain.Entities;
+using TechsysLog.Domain.Enums;
 using TechsysLog.Domain.Interfaces;
 
 namespace TechsysLog.Application.Services;
@@ -28,12 +28,13 @@ public class NotificationService : INotificationService
         _notificationDispatcher = notificationDispatcher;
     }
 
-    public async Task SendAsync(string message, string orderId)
+    public async Task SendAsync(string message, string orderId, NotificationType type)
     {
         var notification = new Notification
         {
             Message = message,
             OrderId = orderId,
+            Type = type,
             IsRead = false,
             CreatedAt = DateTime.UtcNow
         };
@@ -65,6 +66,7 @@ public class NotificationService : INotificationService
         Id = notification.Id,
         Message = notification.Message,
         OrderId = notification.OrderId,
+        Type = notification.Type,
         IsRead = notification.IsRead,
         CreatedAt = notification.CreatedAt,
         ReadAt = notification.ReadAt

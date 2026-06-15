@@ -59,7 +59,8 @@ public class DeliveryService : IDeliveryService
 
         await _notificationService.SendAsync(
             $"Order {order.OrderNumber} has been delivered.",
-            order.Id);
+            order.Id,
+            NotificationType.OrderDelivered);
 
         return MapToResponse(delivery);
     }

@@ -24,6 +24,7 @@ public class SignalRNotificationDispatcher : INotificationDispatcher
             id = notification.Id,
             message = notification.Message,
             orderId = notification.OrderId,
+            type = notification.Type.ToString(),
             createdAt = notification.CreatedAt
         });
     }

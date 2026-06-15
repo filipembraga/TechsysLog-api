@@ -2,6 +2,7 @@ using FluentAssertions;
 using Moq;
 using TechsysLog.Application.Interfaces;
 using TechsysLog.Application.Services;
+using TechsysLog.Domain.Enums;
 using TechsysLog.Domain.Interfaces;
 using TechsysLog.Tests.Builders;
 
@@ -39,13 +40,14 @@ public class NotificationServiceTests
             .Returns(Task.CompletedTask);
 
         // Act
-        await _sut.SendAsync("New order ORD-00001 registered.", "orderId123");
+        await _sut.SendAsync("New order ORD-00001 registered.", "orderId123", NotificationType.OrderRegistered);
 
         // Assert — both persist and dispatch were called exactly once
         _notificationRepositoryMock.Verify(
             r => r.CreateAsync(It.Is<Domain.Entities.Notification>(n =>
                 n.Message == "New order ORD-00001 registered." &&
                 n.OrderId == "orderId123" &&
+                n.Type == NotificationType.OrderRegistered &&
                 n.IsRead == false)),
             Times.Once);
 
@@ -137,7 +139,7 @@ public class NotificationServiceTests
         var before = DateTime.UtcNow;
 
         // Act
-        await _sut.SendAsync("Test message", "orderId123");
+        await _sut.SendAsync("Test message", "orderId123", NotificationType.OrderRegistered);
 
         // Assert
         capturedNotification.Should().NotBeNull();
