@@ -11,7 +11,7 @@ API REST para gerenciamento de pedidos e entregas em contexto logístico, desenv
 | | |
 |---|---|
 | 🏗️ Camadas arquiteturais | 4 |
-| ✅ Testes automatizados | 61 |
+| ✅ Testes automatizados | 60 |
 | 📋 ADRs documentadas | 4 |
 | 🔐 Endpoints protegidos por JWT | 100% |
 
@@ -27,6 +27,15 @@ API REST para gerenciamento de pedidos e entregas em contexto logístico, desenv
 | Autenticação | JWT (`System.IdentityModel.Tokens.Jwt`) |
 | Testes | xUnit + Moq + FluentAssertions |
 | Documentação | OpenAPI + Scalar UI |
+
+---
+
+## Repositórios
+
+| | |
+|---|---|
+| 🔧 **Backend** (este repositório) | API REST, Clean Architecture, MongoDB, SignalR |
+| 🖥️ **Frontend** | [github.com/filipembraga/TechsysLog-frontend](https://github.com/filipembraga/TechsysLog-frontend) — React + Next.js + TanStack Query + SignalR |
 
 ---
 
@@ -51,7 +60,7 @@ API REST para gerenciamento de pedidos e entregas em contexto logístico, desenv
 
 Sistema para a empresa de logística **TechsysLog** gerenciar pedidos, registrar entregas e notificar usuários em tempo real. O backend expõe uma API REST protegida por autenticação JWT, integra com a API pública **ViaCEP** para enriquecimento automático de endereços, e usa **SignalR** para transmitir notificações sempre que um pedido ou entrega é registrado.
 
-O projeto foi construído seguindo os princípios de **Clean Architecture** com separação estrita de camadas, inversão de dependência via projeto CrossCutting dedicado, e foco em testabilidade e decisões de design documentadas.
+O projeto foi construído seguindo os princípios de **Clean Architecture** com separação estrita de camadas, inversão de dependência via projeto CrossCutting dedicado, e foco em testabilidade e decisões de design documentadas. O cliente frontend está disponível em [TechsysLog-frontend](https://github.com/filipembraga/TechsysLog-frontend).
 
 ---
 
@@ -60,7 +69,7 @@ O projeto foi construído seguindo os princípios de **Clean Architecture** com 
 > Architecture Decision Records (ADRs) documentam as decisões técnicas relevantes, seu contexto e consequências. O formato segue a proposta de [Michael Nygard](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions).
 
 <details>
-<summary><strong>### ADR-001 — MongoDB sobre SQL</strong></summary>
+<summary><strong>ADR-001 — MongoDB sobre SQL</strong></summary>
 
 **Status:** Aceito
 
@@ -77,11 +86,10 @@ Usar MongoDB com `MongoDB.Driver` diretamente, sem a camada de abstração do EF
 − Sem suporte nativo a transações ACID entre coleções (não necessário neste escopo)
 − Equipes familiarizadas apenas com SQL têm curva de aprendizado maior
 
----
 </details>
 
 <details>
-<summary><strong>### ADR-002 — SignalR sobre polling</strong></summary>
+<summary><strong>ADR-002 — SignalR sobre polling</strong></summary>
 
 **Status:** Aceito
 
@@ -97,11 +105,10 @@ Usar SignalR com WebSockets como transporte primário. A abstração `INotificat
 − Requer conexão persistente (WebSocket), que pode ser limitada em alguns ambientes de hospedagem
 − Broadcast para todos os clientes conectados neste escopo — evolução natural seria SignalR Groups para targeting por usuário
 
----
 </details>
 
 <details>
-<summary><strong>### ADR-003 — Número de pedido sequencial sobre GUID</strong></summary>
+<summary><strong>ADR-003 — Número de pedido sequencial sobre GUID</strong></summary>
 
 **Status:** Aceito
 
@@ -116,11 +123,10 @@ Números de pedido no formato `ORD-00001` gerados sequencialmente via `CountAsyn
 + Rotas protegidas por JWT com filtro por `UserId` previnem ataques de enumeração
 − Em cenário de alta concorrência, `CountAsync() + 1` pode gerar colisões — a solução correta seria um counter atômico via `$inc` no MongoDB ou sequence generator dedicado
 
----
 </details>
 
 <details>
-<summary><strong>### ADR-004 — CQRS rejeitado</strong></summary>
+<summary><strong>ADR-004 — CQRS rejeitado</strong></summary>
 
 **Status:** Rejeitado
 
@@ -135,12 +141,13 @@ CQRS não foi implementado. Os métodos de serviço atuais são simples o sufici
 + Menor barreira de entrada para novos desenvolvedores
 − Se os modelos de leitura e escrita divergirem significativamente em uma evolução futura, refatorar para CQRS exigirá mais esforço do que adotá-lo desde o início
 
----
 </details>
+
+---
 
 ## Diagrama C4
 
-> Os diagramas abaixo são renderizados nativamente pelo GitHub (Mermaid). Para exportar como PNG e incorporar como imagem estática, cole o bloco desejado no [Mermaid Live Editor](https://mermaid.live) e use **Actions → PNG**.
+> Os diagramas abaixo são renderizados nativamente pelo GitHub (Mermaid). Para exportar como PNG, cole o bloco no [Mermaid Live Editor](https://mermaid.live) e use **Actions → PNG**.
 
 ### Nível 1 — Contexto
 
@@ -149,10 +156,12 @@ C4Context
     title Contexto do Sistema — TechsysLog
     Person(user, "Operador / Usuário", "Acessa via cliente REST ou WebSocket")
     System(api, "TechsysLog API", "Gerencia pedidos, entregas e notificações em tempo real")
+    System_Ext(frontend, "TechsysLog Frontend", "React + Next.js + SignalR")
     System_Ext(viacep, "ViaCEP", "Enriquecimento de endereço por CEP (público, gratuito)")
     System_Ext(mongo, "MongoDB Atlas", "Banco de dados de documentos")
 
-    Rel(user, api, "HTTPS / REST + WSS / SignalR")
+    Rel(user, frontend, "HTTPS / Browser")
+    Rel(frontend, api, "HTTPS / REST + WSS / SignalR")
     Rel(api, viacep, "HTTP GET — consulta CEP")
     Rel(api, mongo, "MongoDB Wire Protocol")
 ```
@@ -223,7 +232,7 @@ TechsysLog/
 │   └── Interfaces/        — IRepository*, INotificationDispatcher, IAddressLookupService
 │
 ├── TechsysLog.Application/
-│   ├── DTOs/              — Requests e Responses
+│   ├── DTOs/              — Requests e Responses (UserBaseDto compartilhado entre UserResponseDto e LoginResponseDto)
 │   ├── Services/          — UserService, OrderService, DeliveryService, NotificationService, JwtService
 │   ├── Interfaces/        — Contratos de serviço
 │   └── Settings/          — JwtSettings
@@ -263,7 +272,7 @@ TechsysLog/
 **1. Clonar o repositório**
 
 ```bash
-git clone https://github.com/seu-usuario/TechsysLog.git
+git clone https://github.com/filipembraga/TechsysLog.git
 cd TechsysLog
 ```
 
@@ -300,41 +309,30 @@ A interface Scalar lista todos os endpoints com schemas de request/response e su
 dotnet test
 ```
 
-O coverage é gerado automaticamente em `coverage.cobertura.xml` na raiz do projeto (configurado via `TechsysLog.Tests.csproj`).
-
 ### Visualizar cobertura inline no VS Code
 
 1. Instale a extensão [Coverage Gutters](https://marketplace.visualstudio.com/items?itemName=ryanluker.vscode-coverage-gutters)
-2. `Cmd+Shift+P` → `Coverage Gutters: Watch`
-3. As linhas cobertas/não cobertas aparecem no gutter de qualquer arquivo `.cs` aberto
+2. Execute `dotnet test` para gerar o relatório de cobertura
+3. `Cmd+Shift+P` → `Coverage Gutters: Display Coverage`
+4. Linhas cobertas/não cobertas aparecem no gutter de qualquer arquivo `.cs` aberto
 
-### Qualidade:
+### Qualidade
 
 | | |
 |---|---|
-| Testes automatizados | 61 |
+| Testes automatizados | 60 |
 | Cobertura — Application (linha) | 98.2% |
 | Cobertura — API (linha) | 100% |
 | Cobertura — Domain (linha) | 100% |
-| Stack de testes | xUnit + Moq + FluentAssertions |
+| Stack de testes | xUnit + Moq + FluentAssertions 7 (MIT) |
 
-### Confiabilidade e Estratégia de Testes
+### Estratégia de testes
 
-O middleware global de tratamento de exceções foi testado intencionalmente com base nas ideias discutidas no artigo:
+O middleware global de tratamento de exceções foi testado intencionalmente com base nas ideias discutidas em:
 
-Yuan et al. — "Simple Testing Can Prevent Most Critical Failures"
+> Yuan et al. — *"Simple Testing Can Prevent Most Critical Failures"*
 
-O estudo demonstra que falhas no tratamento de erros estão entre as principais causas de incidentes catastróficos em sistemas de software.
-
-Por esse motivo, todas as ramificações de exceção do middleware possuem cobertura automatizada, validando:
-
-- mapeamento correto para os respectivos códigos HTTP;
-- respostas seguras para o cliente;
-- ausência de vazamento de detalhes internos da aplicação;
-- registro obrigatório dos erros em log;
-- preservação do fluxo normal de execução (happy path).
-
-O objetivo não é apenas aumentar métricas de cobertura, mas reduzir riscos associados ao tratamento incorreto de falhas, reforçando requisitos de confiabilidade, observabilidade e segurança.
+O estudo demonstra que falhas no tratamento de erros estão entre as principais causas de incidentes catastróficos em sistemas de software. Por esse motivo, todas as ramificações de exceção do middleware possuem cobertura automatizada, validando mapeamento correto para códigos HTTP, respostas seguras ao cliente, ausência de vazamento de detalhes internos e preservação do fluxo normal de execução.
 
 | Camada | Abordagem |
 |--------|-----------|
@@ -371,6 +369,7 @@ O objetivo não é apenas aumentar métricas de cobertura, mas reduzir riscos as
 ### Próximos passos recomendados
 
 **Correlation ID**
+
 Middleware que injeta um `X-Correlation-Id` em cada request e o propaga nos logs — essencial para rastrear uma requisição entre múltiplos serviços ou em análise de logs centralizados (Datadog, Elastic).
 
 ```csharp
@@ -388,13 +387,14 @@ app.Use(async (context, next) => {
 ```
 
 **OpenTelemetry**
+
 A arquitetura está preparada para adoção de OpenTelemetry sem mudanças nas camadas de domínio ou aplicação:
 
 ```bash
 dotnet add package OpenTelemetry.Extensions.Hosting
 dotnet add package OpenTelemetry.Instrumentation.AspNetCore
 dotnet add package OpenTelemetry.Instrumentation.Http
-dotnet add package OpenTelemetry.Exporter.Otlp  # Datadog, Jaeger, Grafana Tempo, etc.
+dotnet add package OpenTelemetry.Exporter.Otlp
 ```
 
 ```csharp
@@ -411,6 +411,7 @@ builder.Services.AddOpenTelemetry()
 ```
 
 **Health Checks**
+
 ```csharp
 builder.Services.AddHealthChecks()
     .AddMongoDb(connectionString, name: "mongodb", tags: ["ready"]);
@@ -422,6 +423,7 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions {
 ```
 
 **Métricas de negócio**
+
 Contadores e histogramas via `System.Diagnostics.Metrics` (nativo no .NET) para métricas relevantes: pedidos criados por minuto, tempo de resposta do ViaCEP, taxa de falha de enriquecimento de endereço.
 
 </details>
@@ -437,7 +439,7 @@ Contadores e histogramas via `System.Diagnostics.Metrics` (nativo no .NET) para 
 
 | Padrão | Implementação |
 |--------|--------------|
-| **Graceful degradation** | Falha no ViaCEP não interrompe a criação do pedido — o endereço fornecido pelo usuário é usado como fallback |
+| **Graceful degradation** | Falha no ViaCEP não interrompe a criação do pedido — o endereço fornecido pelo usuário é usado como fallback com `Trim()` e `ToUpper()` no campo `state` |
 | **Failure isolation** | `ExceptionHandlingMiddleware` garante que exceções não tratadas não vazam stack traces para o cliente |
 | **Logging de falha contextualizado** | Erros em dependências externas são logados com contexto completo (`ZipCode`, tipo da exceção) sem propagar para o chamador |
 
@@ -473,10 +475,10 @@ builder.Services.AddHttpClient<IAddressLookupService, ViaCepClient>(client => {
 ```
 
 **Cache de CEP com Redis**
+
 CEPs raramente mudam — cachear respostas do ViaCEP reduz latência e desacopla o sistema do serviço externo:
 
 ```csharp
-// Decorator de IAddressLookupService com cache distribuído
 public class CachedAddressLookupService(
     IAddressLookupService inner,
     IDistributedCache cache) : IAddressLookupService
@@ -526,6 +528,7 @@ Pedido criado
 ```
 
 **Outbox Pattern**
+
 Garante consistência entre a escrita no banco e a publicação do evento — sem risco de mensagem perdida em caso de falha entre os dois:
 
 ```
@@ -540,6 +543,7 @@ Worker em background:
 ```
 
 **Considerações sobre Event Sourcing**
+
 O domínio de pedidos e entregas tem histórico imutável por natureza (`Pending → Shipped → Delivered`). Event Sourcing seria apropriado se o histórico completo de transições de estado se tornasse um requisito de negócio explícito — mas aumenta significativamente a complexidade operacional e seria prematuro neste escopo.
 
 **Tecnologias avaliadas**
@@ -555,6 +559,16 @@ O domínio de pedidos e entregas tem histórico imutável por natureza (`Pending
 
 ---
 
+## Banco de Dados
+
+Dados reais na collection `orders` do MongoDB Atlas durante desenvolvimento:
+
+![MongoDB Atlas — collection orders](docs/mongodb-orders.png)
+
+Os documentos mostram o modelo de dados em produção: `OrderNumber` sequencial (`ORD-00001`), `DeliveryAddress` embutido como subdocumento, `Status` como inteiro (`0` = Pending, `2` = Delivered) e `UserId` referenciando a collection `users`.
+
+---
+
 ## Endpoints
 
 ### Auth
@@ -562,7 +576,7 @@ O domínio de pedidos e entregas tem histórico imutável por natureza (`Pending
 | Método | Rota | Auth | Descrição |
 |--------|------|------|-----------|
 | `POST` | `/api/auth/register` | ✗ | Registra novo usuário |
-| `POST` | `/api/auth/login` | ✗ | Autentica e retorna token JWT |
+| `POST` | `/api/auth/login` | ✗ | Autentica e retorna token JWT + dados do usuário |
 
 ### Pedidos
 
@@ -640,6 +654,20 @@ Authorization: Bearer {token}
 { "statusCode": 404, "message": "Order 6a2a344d034b3271f27a233c not found." }
 ```
 
+### Exemplo — Login
+
+**`200 OK`**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "user": {
+    "id": "6a29ccb85c6f09702e1853de",
+    "name": "Filipe Braga",
+    "email": "filipe@techsyslog.com"
+  }
+}
+```
+
 ### Notificações em tempo real (SignalR)
 
 Conecte ao hub em `/hubs/notifications` passando o JWT como query string:
@@ -656,7 +684,6 @@ Escute o evento `ReceiveNotification` para receber atualizações em tempo real 
 
 | Item | Motivo |
 |------|--------|
-| **Frontend** | Entregue como fase separada após conclusão do backend. React + Next.js é a implementação planejada |
 | **Refresh tokens** | Expiração JWT configurada em 1 hora. Refresh tokens adicionam complexidade fora do escopo deste desafio |
 | **SignalR por usuário** | Notificações são broadcast para todos os clientes conectados. Targeting por usuário exigiria SignalR Groups — documentado como próximo passo natural |
 | **Paginação** | Não implementada dado o volume de dados esperado no contexto do desafio. A arquitetura suporta adição sem breaking changes |
@@ -671,16 +698,18 @@ Escute o evento `ReceiveNotification` para receber atualizações em tempo real 
 
 REST API for order and delivery management in a logistics context, built as a technical challenge using **C# with .NET 10**, **ASP.NET Core**, **MongoDB**, and **SignalR**.
 
+The frontend client is available at [TechsysLog-frontend](https://github.com/filipembraga/TechsysLog-frontend) — React + Next.js + TanStack Query + SignalR.
+
 ### Architecture
 
 The solution follows **Clean Architecture** with four independent layers: **Domain** (entities, value objects, repository interfaces — no external dependencies), **Application** (services, DTOs, service interfaces), **Infrastructure** (MongoDB repositories, ViaCEP HTTP client, SignalR dispatcher), and **CrossCutting** (the composition root — the only project aware of all layers). The **API** references only Application and CrossCutting, never Infrastructure directly.
 
-Key decisions documented as ADRs: MongoDB over SQL (document model fits the domain naturally — [ADR-001](#adr-001--mongodb-sobre-sql)), SignalR over polling with transport abstraction via `INotificationDispatcher` ([ADR-002](#adr-002--signalr-sobre-polling)), sequential order numbers (`ORD-00001`) over GUIDs for operational readability ([ADR-003](#adr-003--número-de-pedido-sequencial-sobre-guid)), and CQRS rejected as premature for this scope ([ADR-004](#adr-004--cqrs-rejeitado)).
+Key decisions documented as ADRs: MongoDB over SQL ([ADR-001](#adr-001--mongodb-sobre-sql)), SignalR over polling with transport abstraction via `INotificationDispatcher` ([ADR-002](#adr-002--signalr-sobre-polling)), sequential order numbers (`ORD-00001`) over GUIDs ([ADR-003](#adr-003--número-de-pedido-sequencial-sobre-guid)), and CQRS rejected as premature ([ADR-004](#adr-004--cqrs-rejeitado)).
 
 ### Running
 
 ```bash
-git clone https://github.com/your-username/TechsysLog.git
+git clone https://github.com/filipembraga/TechsysLog.git
 cd TechsysLog
 dotnet user-secrets set "MongoDb:ConnectionString" "your-connection-string" --project TechsysLog.API
 dotnet user-secrets set "Jwt:Secret" "your-secret-minimum-32-chars" --project TechsysLog.API
@@ -692,7 +721,7 @@ Access the Scalar UI at `https://localhost:{port}/scalar/v1`.
 ### Tests
 
 ```bash
-dotnet test  # 61 tests, generates coverage.cobertura.xml automatically
+dotnet test  # 60 tests — Application 98.2%, API 100%, Domain 100%
 ```
 
 Unit tests cover Application services (Moq) and API controllers (injected `ClaimsPrincipal`). Infrastructure is excluded from unit test coverage — integration tests against a real MongoDB instance are the natural next step.
