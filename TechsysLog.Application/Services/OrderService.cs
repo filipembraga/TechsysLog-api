@@ -102,7 +102,7 @@ public class OrderService : IOrderService
                 return new Address(
                     zipCode: dto.ZipCode,
                     street: viaCepAddress.Street,
-                    number: dto.Number,
+                    number: dto.Number.Trim(),
                     neighborhood: viaCepAddress.Neighborhood,
                     city: viaCepAddress.City,
                     state: viaCepAddress.State);
@@ -117,12 +117,13 @@ public class OrderService : IOrderService
         }
 
         return new Address(
-            zipCode: dto.ZipCode,
-            street: dto.Street,
-            number: dto.Number,
-            neighborhood: dto.Neighborhood,
-            city: dto.City,
-            state: dto.State);
+            zipCode: dto.ZipCode.Trim(),
+            street: dto.Street.Trim(),
+            number: dto.Number.Trim(),
+            neighborhood: dto.Neighborhood.Trim(),
+            city: dto.City.Trim(),
+            state: dto.State.ToUpper()
+        );
     }
 
     private static OrderResponseDto MapToResponse(Order order) => new()
