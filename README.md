@@ -10,10 +10,10 @@ API REST para gerenciamento de pedidos e entregas em contexto logístico, desenv
 
 | | |
 |---|---|
-| 🏗️ Camadas arquiteturais | 4 |
+| 🏗️ Camadas arquiteturais | 4 (+ API entrypoint) |
 | ✅ Testes automatizados | 60 |
 | 📋 ADRs documentadas | 4 |
-| 🔐 Endpoints protegidos por JWT | 100% |
+| 🔐 Endpoints de domínio protegidos por JWT | 100% |
 
 ---
 
@@ -35,7 +35,7 @@ API REST para gerenciamento de pedidos e entregas em contexto logístico, desenv
 | | |
 |---|---|
 | 🔧 **Backend** (este repositório) | API REST, Clean Architecture, MongoDB, SignalR |
-| 🖥️ **Frontend** | [github.com/filipembraga/TechsysLog-frontend](https://github.com/filipembraga/TechsysLog-frontend) — React + Next.js + TanStack Query + SignalR |
+| 🖥️ **Frontend** | [github.com/filipembraga/TechsysLog-frontend](https://github.com/filipembraga/TechsysLog-frontend) — React + Vite + TanStack Query + SignalR |
 
 ---
 
@@ -642,11 +642,6 @@ Authorization: Bearer {token}
   "userId": "6a29ccb85c6f09702e1853de",
   "createdAt": "2026-06-11T04:06:37.701Z"
 }
-```
-
-**`409 Conflict`** — entrega duplicada
-```json
-{ "statusCode": 409, "message": "Order ORD-00001 has already been delivered." }
 ```
 
 **`404 Not Found`**
