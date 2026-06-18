@@ -414,41 +414,13 @@ Contadores e histogramas via `System.Diagnostics.Metrics` (nativo no .NET) para 
 | **Graceful degradation** | Falha no ViaCEP não interrompe a criação do pedido — o endereço fornecido pelo usuário é usado como fallback com `Trim()` e `ToUpper()` no campo `state` |
 | **Failure isolation** | `ExceptionHandlingMiddleware` garante que exceções não tratadas não vazam stack traces para o cliente |
 | **Logging de falha contextualizado** | Erros em dependências externas são logados com contexto completo (`ZipCode`, tipo da exceção) sem propagar para o chamador |
+| **Retry + Circuit Breaker** | `ViaCepClient` protegido com pipeline Polly via `Microsoft.Extensions.Http.Resilience` — 3 retries com backoff exponencial (200ms base), circuit breaker com threshold de 50% em janela de 30s, timeout de 3s por tentativa. Configurado em `ViaCepClientExtensions` na camada Infrastructure, transparente para Application |
 
 ### Próximos passos recomendados
 
-**Retry + Circuit Breaker com Polly para o ViaCEP**
-
-```bash
-dotnet add package Microsoft.Extensions.Http.Resilience
-```
-
-```csharp
-builder.Services.AddHttpClient<IAddressLookupService, ViaCepClient>(client => {
-    client.BaseAddress = new Uri(configuration["ViaCep:BaseUrl"] ?? "https://viacep.com.br/ws/");
-})
-.AddResilienceHandler("viacep", pipeline => {
-    pipeline.AddRetry(new HttpRetryStrategyOptions {
-        MaxRetryAttempts = 3,
-        Delay = TimeSpan.FromMilliseconds(200),
-        BackoffType = DelayBackoffType.Exponential,
-        ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
-            .Handle<HttpRequestException>()
-            .HandleResult(r => (int)r.StatusCode >= 500)
-    });
-    pipeline.AddCircuitBreaker(new HttpCircuitBreakerStrategyOptions {
-        SamplingDuration = TimeSpan.FromSeconds(30),
-        FailureRatio = 0.5,
-        MinimumThroughput = 5,
-        BreakDuration = TimeSpan.FromSeconds(15)
-    });
-    pipeline.AddTimeout(TimeSpan.FromSeconds(3));
-});
-```
-
 **Cache de CEP com Redis**
 
-CEPs raramente mudam — cachear respostas do ViaCEP reduz latência e desacopla o sistema do serviço externo:
+CEPs raramente mudam — cachear respostas do ViaCEP reduz latência e desacopla o sistema do serviço externo. Por outro lado, pode-se considerar para o contexto da aplicação de teste over-engineering: ViaCEP é gratuita, rápida e o projeto não tem requisitos de Escalabilidade para tal. Segue apenas documentado como possível próximo passo:
 
 ```csharp
 public class CachedAddressLookupService(
@@ -664,7 +636,7 @@ Escute o evento `ReceiveNotification` para receber atualizações em tempo real 
 | **Docker** | Não exigido pelo desafio, mas a arquitetura suporta containerização sem mudanças em nenhuma camada |
 | **Testes de integração** | Infrastructure excluída da cobertura unitária. Testes de integração contra MongoDB real seriam o próximo passo para validar corretude das queries |
 | **CQRS** | Avaliado e rejeitado para este escopo — ver [ADR-004](#adr-004--cqrs-rejeitado) |
-| **Retry / Circuit Breaker** | ViaCEP já tem graceful degradation. Polly com retry exponencial e circuit breaker é o próximo passo — ver [Resiliência](#resiliência) |
+| **Cache de CEP com Redis** | ViaCEP é gratuito e rápido — Redis adicionaria dependência operacional sem ganho mensurável no escopo atual. Documentado como próximo passo em Resiliência |
 
 ---
 

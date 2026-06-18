@@ -33,11 +33,7 @@ public static class DependencyInjection
             sp.GetRequiredService<MongoDbContext>().Client);
         services.AddSignalR();
 
-        services.AddHttpClient<IAddressLookupService, ViaCepClient>(client =>
-        {
-            client.BaseAddress = new Uri(configuration["ViaCep:BaseUrl"]
-                ?? "https://viacep.com.br/ws/");
-        });
+        services.AddViaCepClient(configuration);
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
