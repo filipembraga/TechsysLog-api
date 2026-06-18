@@ -365,62 +365,17 @@ O estudo demonstra que falhas no tratamento de erros estão entre as principais 
 | **Logging estruturado** | `ILogger<T>` injetado nos serviços; logs com nível (`Information`, `Warning`, `Error`) e parâmetros nomeados (`{ZipCode}`, `{OrderId}`) |
 | **Tratamento global de erros** | `ExceptionHandlingMiddleware` intercepta todas as exceções não tratadas e retorna respostas padronizadas com `statusCode` e `message` — stack traces nunca vazam para o cliente |
 | **Log de degradação** | Falhas no ViaCEP são registradas como `LogWarning` com contexto completo — sem interrupção do fluxo principal |
+| **Correlation ID** | `CorrelationIdMiddleware` injeta `X-Correlation-Id` em cada request — gerado no backend se não enviado pelo cliente, propagado nos logs via `BeginScope` e exposto na response header para rastreabilidade end-to-end |
+| **Health Checks** | `GET /health` (liveness) e `GET /health/ready` (readiness com probe MongoDB) — endpoints padronizados para integração com orquestradores e load balancers |
 
 ### Próximos passos recomendados
-
-**Correlation ID**
-
-Middleware que injeta um `X-Correlation-Id` em cada request e o propaga nos logs — essencial para rastrear uma requisição entre múltiplos serviços ou em análise de logs centralizados (Datadog, Elastic).
-
-```csharp
-app.Use(async (context, next) => {
-    var correlationId = context.Request.Headers["X-Correlation-Id"]
-        .FirstOrDefault() ?? Guid.NewGuid().ToString();
-    context.Items["CorrelationId"] = correlationId;
-    context.Response.Headers["X-Correlation-Id"] = correlationId;
-    using (logger.BeginScope(new Dictionary<string, object> {
-        ["CorrelationId"] = correlationId }))
-    {
-        await next();
-    }
-});
-```
 
 **OpenTelemetry**
 
 A arquitetura está preparada para adoção de OpenTelemetry sem mudanças nas camadas de domínio ou aplicação:
-
-```bash
-dotnet add package OpenTelemetry.Extensions.Hosting
-dotnet add package OpenTelemetry.Instrumentation.AspNetCore
-dotnet add package OpenTelemetry.Instrumentation.Http
-dotnet add package OpenTelemetry.Exporter.Otlp
-```
-
-```csharp
-builder.Services.AddOpenTelemetry()
-    .WithTracing(tracing => tracing
-        .AddAspNetCoreInstrumentation()
-        .AddHttpClientInstrumentation()
-        .AddMongoDBInstrumentation()
-        .AddOtlpExporter())
-    .WithMetrics(metrics => metrics
-        .AddAspNetCoreInstrumentation()
-        .AddRuntimeInstrumentation()
-        .AddOtlpExporter());
-```
-
-**Health Checks**
-
-```csharp
-builder.Services.AddHealthChecks()
-    .AddMongoDb(connectionString, name: "mongodb", tags: ["ready"]);
-
-app.MapHealthChecks("/health");
-app.MapHealthChecks("/health/ready", new HealthCheckOptions {
-    Predicate = check => check.Tags.Contains("ready")
-});
-```
+...
+(mantém o bloco existente do OpenTelemetry)
+...
 
 **Métricas de negócio**
 
@@ -602,6 +557,13 @@ Os documentos mostram o modelo de dados em produção: `OrderNumber` sequencial 
 | `GET` | `/api/notifications/unread` | ✓ | Retorna apenas notificações não lidas |
 | `PATCH` | `/api/notifications/{id}/read` | ✓ | Marca notificação como lida para o usuário autenticado |
 
+### Observabilidade
+
+| Método | Rota | Auth | Descrição |
+|--------|------|------|-----------|
+| `GET` | `/health` | ✗ | Liveness — verifica se o processo está de pé |
+| `GET` | `/health/ready` | ✗ | Readiness — verifica se o MongoDB está disponível |
+
 ### Exemplo — Criar pedido
 
 **Request**
@@ -699,7 +661,7 @@ The frontend client is available at [TechsysLog-frontend](https://github.com/fil
 
 The solution follows **Clean Architecture** with four independent layers: **Domain** (entities, value objects, repository interfaces — no external dependencies), **Application** (services, DTOs, service interfaces), **Infrastructure** (MongoDB repositories, ViaCEP HTTP client, SignalR dispatcher), and **CrossCutting** (the composition root — the only project aware of all layers). The **API** references only Application and CrossCutting, never Infrastructure directly.
 
-Key decisions documented as ADRs: MongoDB over SQL ([ADR-001](#adr-001--mongodb-sobre-sql)), SignalR over polling with transport abstraction via `INotificationDispatcher` ([ADR-002](#adr-002--signalr-sobre-polling)), sequential order numbers (`ORD-00001`) over GUIDs ([ADR-003](#adr-003--número-de-pedido-sequencial-sobre-guid)), and CQRS rejected as premature ([ADR-004](#adr-004--cqrs-rejeitado)).
+Key decisions documented as ADRs: MongoDB over SQL ([ADR-001](#adr-001--mongodb-sobre-sql)), SignalR over polling with transport abstraction via `INotificationDispatcher` ([ADR-002](#adr-002--signalr-sobre-polling)), sequential order numbers (`ORD-00001`) over GUIDs ([ADR-003](#adr-003--número-de-pedido-sequencial-sobre-guid)), and CQRS rejected as premature ([ADR-004](#adr-004--cqrs-rejeitado)). Observability additions post-challenge: `CorrelationIdMiddleware` for per-request traceability via `X-Correlation-Id` header and log scope propagation; health check endpoints (`/health`, `/health/ready`) with MongoDB readiness probe implemented as `IHealthCheck` in the Infrastructure layer.
 
 ### Running
 
