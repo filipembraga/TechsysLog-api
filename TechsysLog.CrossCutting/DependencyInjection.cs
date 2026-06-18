@@ -10,6 +10,7 @@ using TechsysLog.Application.Services;
 using TechsysLog.Application.Settings;
 using TechsysLog.Infrastructure.ExternalServices;
 using TechsysLog.Infrastructure.WebSockets;
+using MongoDB.Driver;
 
 namespace TechsysLog.CrossCutting;
 
@@ -25,9 +26,11 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
         IConfiguration configuration)
-    { 
+    {
         services.Configure<MongoDbSettings>(configuration.GetSection("MongoDb"));
         services.AddSingleton<MongoDbContext>();
+        services.AddSingleton<IMongoClient>(sp =>
+            sp.GetRequiredService<MongoDbContext>().Client);
         services.AddSignalR();
 
         services.AddHttpClient<IAddressLookupService, ViaCepClient>(client =>
@@ -35,7 +38,7 @@ public static class DependencyInjection
             client.BaseAddress = new Uri(configuration["ViaCep:BaseUrl"]
                 ?? "https://viacep.com.br/ws/");
         });
-        
+
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IDeliveryRepository, DeliveryRepository>();
@@ -48,7 +51,7 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(
         this IServiceCollection services,
         IConfiguration configuration)
-    { 
+    {
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
         services.AddScoped<IJwtService, JwtService>();
 
@@ -56,7 +59,7 @@ public static class DependencyInjection
         services.AddScoped<IOrderService, OrderService>();
         services.AddScoped<IDeliveryService, DeliveryService>();
         services.AddScoped<INotificationService, NotificationService>();
-        
+
         return services;
-     }
+    }
 }

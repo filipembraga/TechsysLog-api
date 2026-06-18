@@ -1,12 +1,15 @@
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using TechsysLog.API.Middleware;
 using TechsysLog.Application.Settings;
 using TechsysLog.CrossCutting;
+using TechsysLog.Infrastructure.HealthChecks;
 using TechsysLog.Infrastructure.WebSockets.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -93,6 +96,11 @@ builder.Services.AddCors(options =>
          .AllowAnyMethod()
          .WithExposedHeaders("X-Correlation-Id")
          .AllowCredentials())); 
+
+builder.Services.AddHealthChecks()
+    .AddCheck("self", () => HealthCheckResult.Healthy())
+    .AddCheck<MongoDbHealthCheck>("mongodb", tags: new[] { "ready" });
+    
          
 var app = builder.Build();
 
@@ -117,5 +125,11 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
+
+app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
 
 app.Run();
