@@ -89,11 +89,14 @@ builder.Services.AddSignalR();
 builder.Services.AddCors(options =>
     options.AddPolicy("Frontend", p =>
         p.WithOrigins("http://localhost:3000")
-         .AllowAnyHeader().AllowAnyMethod()
+         .AllowAnyHeader()
+         .AllowAnyMethod()
+         .WithExposedHeaders("X-Correlation-Id")
          .AllowCredentials())); 
-
+         
 var app = builder.Build();
 
+app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
