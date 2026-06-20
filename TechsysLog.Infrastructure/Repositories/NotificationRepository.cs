@@ -22,13 +22,17 @@ public class NotificationRepository : INotificationRepository
 
     public async Task<List<Notification>> GetAllAsync()
     {
-        return await _collection.Find(_ => true).ToListAsync();
+        return await _collection.Find(_ => true)
+            .SortByDescending(n => n.CreatedAt)
+            .ToListAsync();
     }
 
     public async Task<List<Notification>> GetUnreadAsync()
     {
         var filter = Builders<Notification>.Filter.Eq(n => n.IsRead, false);
-        return await _collection.Find(filter).ToListAsync();
+        return await _collection.Find(filter)
+            .SortByDescending(n => n.CreatedAt)
+            .ToListAsync();
     }
 
     public async Task MarkAsReadAsync(string id, string userId)
