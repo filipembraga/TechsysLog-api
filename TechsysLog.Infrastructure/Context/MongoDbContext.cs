@@ -25,6 +25,7 @@ public class MongoDbContext
     public IMongoCollection<Order> Orders => _database.GetCollection<Order>("Orders");
     public IMongoCollection<Notification> Notifications => _database.GetCollection<Notification>("Notifications");  
     public IMongoCollection<Delivery> Deliveries => _database.GetCollection<Delivery>("Deliveries");
+    public IMongoCollection<RefreshToken> RefreshTokens => _database.GetCollection<RefreshToken>("refreshTokens");
 
     private void CreateIndexes()
     {
@@ -45,5 +46,15 @@ public class MongoDbContext
         var deliveryOrderIdIndex = Builders<Delivery>.IndexKeys.Ascending(d => d.OrderId);
         Deliveries.Indexes.CreateOne(new CreateIndexModel<Delivery>(
             deliveryOrderIdIndex));
+
+        var refreshTokenHashIndex = Builders<RefreshToken>.IndexKeys.Ascending(t => t.TokenHash);
+        RefreshTokens.Indexes.CreateOne(new CreateIndexModel<RefreshToken>(
+            refreshTokenHashIndex,
+            new CreateIndexOptions { Unique = true }));
+
+        var refreshTokenExpiryIndex = Builders<RefreshToken>.IndexKeys.Ascending(t => t.ExpiresAt);
+        RefreshTokens.Indexes.CreateOne(new CreateIndexModel<RefreshToken>(
+            refreshTokenExpiryIndex,
+            new CreateIndexOptions { ExpireAfter = TimeSpan.Zero }));
     }
 }
