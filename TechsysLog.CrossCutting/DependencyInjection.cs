@@ -50,7 +50,7 @@ public static class DependencyInjection
         IConfiguration configuration)
     {
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
-        services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<ITokenService, TokenService>();
 
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IOrderService, OrderService>();

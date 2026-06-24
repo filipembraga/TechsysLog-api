@@ -26,4 +26,10 @@ public class UserRepository : IUserRepository
         var filter = Builders<User>.Filter.Eq(u => u.Email, email);
         return await _collection.Find(filter).FirstOrDefaultAsync();
     }
+
+    public async Task<User?> GetByIdAsync(string id)
+    {
+        var filter = Builders<User>.Filter.Eq(u => u.Id, id);
+        return await _collection.Find(filter).FirstOrDefaultAsync();
+    }
 }

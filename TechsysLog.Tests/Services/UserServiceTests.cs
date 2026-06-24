@@ -10,19 +10,19 @@ namespace TechsysLog.Tests.Services;
 
 /// <summary>
 /// Unit tests for UserService.
-/// Repository and JwtService are mocked — only business logic is tested.
+/// Repository and TokenService are mocked — only business logic is tested.
 /// </summary>
 public class UserServiceTests
 {
     private readonly Mock<IUserRepository> _userRepositoryMock;
-    private readonly Mock<IJwtService> _jwtServiceMock;
+    private readonly Mock<ITokenService> _tokenServiceMock;
     private readonly IUserService _sut;
 
     public UserServiceTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
-        _jwtServiceMock = new Mock<IJwtService>();
-        _sut = new UserService(_userRepositoryMock.Object, _jwtServiceMock.Object);
+        _tokenServiceMock = new Mock<ITokenService>();
+        _sut = new UserService(_userRepositoryMock.Object, _tokenServiceMock.Object);
     }
 
     [Fact]
@@ -103,7 +103,7 @@ public class UserServiceTests
             .Setup(r => r.GetByEmailAsync(dto.Email))
             .ReturnsAsync(user);
 
-        _jwtServiceMock
+        _tokenServiceMock
             .Setup(j => j.GenerateToken(user.Id, user.Email))
             .Returns("valid.jwt.token");
 

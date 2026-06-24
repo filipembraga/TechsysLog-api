@@ -8,16 +8,16 @@ using TechsysLog.Application.Settings;
 namespace TechsysLog.Tests.Services;
 
 /// <summary>
-/// Unit tests for JwtService.
+/// Unit tests for TokenService.
 /// Verifies that generated tokens carry the correct claims, issuer, audience and expiration.
 /// These are security-critical contracts — a silent regression here breaks authentication for all users.
 /// </summary>
-public class JwtServiceTests
+public class TokenServiceTests
 {
     private const string UserId = "6a29ccb85c6f09702e1853de";
     private const string Email = "filipe@techsyslog.com";
 
-    private static JwtService Create(int expirationHours = 1) => new(Options.Create(new JwtSettings
+    private static TokenService Create(int expirationHours = 1) => new(Options.Create(new JwtSettings
     {
         Secret = "supersecretkey-minimum-32-characters-long!!",
         Issuer = "TechsysLog",
