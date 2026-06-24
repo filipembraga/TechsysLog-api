@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using TechsysLog.API.Controllers;
@@ -54,6 +55,28 @@ public class AuthControllerTests
     }
 
     [Fact]
+    public async Task RegisterAsync_WhenServiceThrows_ExceptionPropagates()
+    {
+        // Arrange — middleware handles this in production
+        var dto = new CreateUserDto
+        {
+            Name = "Test",
+            Email = "duplicate@techsyslog.com",
+            Password = "Test@1234"
+        };
+
+        _userServiceMock.Setup(s => s.RegisterAsync(dto))
+            .ThrowsAsync(new InvalidOperationException("Email already registered."));
+
+        // Act
+        var act = async () => await _sut.RegisterAsync(dto);
+
+        // Assert — exception propagates to ExceptionHandlingMiddleware
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Email already registered.");
+    }
+
+    [Fact]
     public async Task LoginAsync_WithValidCredentials_Returns200WithToken()
     {
         // Arrange
@@ -75,7 +98,9 @@ public class AuthControllerTests
         };
 
         _userServiceMock.Setup(s => s.LoginAsync(dto))
-            .ReturnsAsync(loginResponse);
+            .ReturnsAsync((loginResponse, "refresh-token-value", DateTime.UtcNow.AddDays(7)));
+
+        _sut.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
 
         // Act
         var result = await _sut.LoginAsync(dto);
@@ -83,27 +108,59 @@ public class AuthControllerTests
         // Assert
         result.Should().BeOfType<OkObjectResult>()
         .Which.StatusCode.Should().Be(200);
+        _sut.Response.Headers["Set-Cookie"].ToString().Should().Contain("refreshToken=");
     }
 
     [Fact]
-    public async Task RegisterAsync_WhenServiceThrows_ExceptionPropagates()
+    public async Task RefreshAsync_WithValidCookie_Returns200WithNewToken()
     {
-        // Arrange — middleware handles this in production
-        var dto = new CreateUserDto
+        // Arrange
+        var loginResponse = new LoginResponseDto
         {
-            Name = "Test",
-            Email = "duplicate@techsyslog.com",
-            Password = "Test@1234"
+            Token = "new.jwt.token",
+            User = new UserBaseDto { Id = "6a29ccb85c6f09702e1853de", Name = "Zé das Couves", Email = "user@techsyslog.com" }
         };
 
-        _userServiceMock.Setup(s => s.RegisterAsync(dto))
-            .ThrowsAsync(new InvalidOperationException("Email already registered."));
+        _userServiceMock.Setup(s => s.RefreshAsync("valid-refresh-token")).ReturnsAsync(loginResponse);
+
+        var httpContext = new DefaultHttpContext();
+        httpContext.Request.Headers["Cookie"] = "refreshToken=valid-refresh-token";
+        _sut.ControllerContext = new ControllerContext { HttpContext = httpContext };
 
         // Act
-        var act = async () => await _sut.RegisterAsync(dto);
+        var result = await _sut.RefreshAsync();
 
-        // Assert — exception propagates to ExceptionHandlingMiddleware
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("Email already registered.");
+        // Assert
+        result.Should().BeOfType<OkObjectResult>().Which.StatusCode.Should().Be(200);
+    }
+
+    [Fact]
+    public async Task RefreshAsync_WithoutCookie_Returns401()
+    {
+        // Arrange
+        _sut.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
+
+        // Act
+        var result = await _sut.RefreshAsync();
+
+        // Assert
+        result.Should().BeOfType<UnauthorizedResult>();
+        _userServiceMock.Verify(s => s.RefreshAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task LogoutAsync_WithCookie_DeletesCookieAndCallsService()
+    {
+        // Arrange
+        var httpContext = new DefaultHttpContext();
+        httpContext.Request.Headers["Cookie"] = "refreshToken=valid-refresh-token";
+        _sut.ControllerContext = new ControllerContext { HttpContext = httpContext };
+
+        // Act
+        var result = await _sut.LogoutAsync();
+
+        // Assert
+        result.Should().BeOfType<NoContentResult>();
+        _userServiceMock.Verify(s => s.LogoutAsync("valid-refresh-token"), Times.Once);
     }
 }

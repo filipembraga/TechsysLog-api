@@ -26,17 +26,17 @@ public class TokenServiceTests
     }));
 
     [Fact]
-    public void GenerateToken_ReturnsWellFormedJwt()
+    public void GenerateAccessToken_ReturnsWellFormedJwt()
     {
         // JWT format is three base64url segments separated by dots
-        var token = Create().GenerateToken(UserId, Email);
+        var token = Create().GenerateAccessToken(UserId, Email);
         token.Split('.').Should().HaveCount(3);
     }
 
     [Fact]
-    public void GenerateToken_ContainsUserIdClaim()
+    public void GenerateAccessToken_ContainsUserIdClaim()
     {
-        var token = Create().GenerateToken(UserId, Email);
+        var token = Create().GenerateAccessToken(UserId, Email);
         var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
 
         jwt.Claims.Should().Contain(c =>
@@ -44,9 +44,9 @@ public class TokenServiceTests
     }
 
     [Fact]
-    public void GenerateToken_ContainsEmailClaim()
+    public void GenerateAccessToken_ContainsEmailClaim()
     {
-        var token = Create().GenerateToken(UserId, Email);
+        var token = Create().GenerateAccessToken(UserId, Email);
         var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
 
         jwt.Claims.Should().Contain(c =>
@@ -54,16 +54,16 @@ public class TokenServiceTests
     }
 
     [Fact]
-    public void GenerateToken_HasCorrectIssuer()
+    public void GenerateAccessToken_HasCorrectIssuer()
     {
-        var token = Create().GenerateToken(UserId, Email);
+        var token = Create().GenerateAccessToken(UserId, Email);
         new JwtSecurityTokenHandler().ReadJwtToken(token).Issuer.Should().Be("TechsysLog");
     }
 
     [Fact]
-    public void GenerateToken_HasCorrectAudience()
+    public void GenerateAccessToken_HasCorrectAudience()
     {
-        var token = Create().GenerateToken(UserId, Email);
+        var token = Create().GenerateAccessToken(UserId, Email);
         new JwtSecurityTokenHandler().ReadJwtToken(token).Audiences.Should().Contain("TechsysLogUsers");
     }
 
@@ -71,13 +71,39 @@ public class TokenServiceTests
     [InlineData(1)]
     [InlineData(2)]
     [InlineData(24)]
-    public void GenerateToken_ExpiresAfterConfiguredHours(int hours)
+    public void GenerateAccessToken_ExpiresAfterConfiguredHours(int hours)
     {
         var before = DateTime.UtcNow;
-        var token = Create(expirationHours: hours).GenerateToken(UserId, Email);
+        var token = Create(expirationHours: hours).GenerateAccessToken(UserId, Email);
         var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
 
         jwt.ValidTo.Should().BeCloseTo(before.AddHours(hours), TimeSpan.FromSeconds(5));
     }
 
+    [Fact]
+    public void GenerateRefreshToken_ReturnsNonEmptyValue()
+    {
+        var token = Create().GenerateRefreshToken();
+        token.Should().NotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public void GenerateRefreshToken_ReturnsUniqueValueOnEachCall()
+    {
+        var sut = Create();
+        var token1 = sut.GenerateRefreshToken();
+        var token2 = sut.GenerateRefreshToken();
+
+        token1.Should().NotBe(token2);
+    }
+
+    [Fact]
+    public void GenerateRefreshToken_ReturnsValidBase64String()
+    {
+        var token = Create().GenerateRefreshToken();
+        var act = () => Convert.FromBase64String(token);
+
+        act.Should().NotThrow();
+        Convert.FromBase64String(token).Should().HaveCount(32);
+    }
 }
