@@ -29,11 +29,11 @@ builder.Services.AddOpenApi("v1", options =>
             BearerFormat = "JWT",
             Description = "Enter your JWT token."
         };
-        
+
         document.Components ??= new OpenApiComponents();
         document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
         document.Components.SecuritySchemes.TryAdd("Bearer", securityScheme);
-        
+
         return Task.CompletedTask;
     });
 });
@@ -43,7 +43,7 @@ builder.Services.AddControllers()
 builder.Services
     .AddInfrastructure(builder.Configuration)
     .AddApplication(builder.Configuration);
-    
+
 builder.Services.AddEndpointsApiExplorer();
 
 var jwtSettings = builder.Configuration
@@ -63,7 +63,8 @@ builder.Services
             ValidIssuer = jwtSettings.Issuer,
             ValidAudience = jwtSettings.Audience,
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtSettings.Secret))
+                Encoding.UTF8.GetBytes(jwtSettings.Secret)),
+            ClockSkew = TimeSpan.FromSeconds(30)
         };
 
         // SignalR cannot send Authorization headers via WebSocket —
@@ -91,17 +92,17 @@ builder.Services.AddSignalR();
 
 builder.Services.AddCors(options =>
     options.AddPolicy("Frontend", p =>
-        p.WithOrigins("http://localhost:3000")
+        p.WithOrigins("https://localhost:3000")
          .AllowAnyHeader()
          .AllowAnyMethod()
          .WithExposedHeaders("X-Correlation-Id")
-         .AllowCredentials())); 
+         .AllowCredentials()));
 
 builder.Services.AddHealthChecks()
     .AddCheck("self", () => HealthCheckResult.Healthy())
     .AddCheck<MongoDbHealthCheck>("mongodb", tags: new[] { "ready" });
-    
-         
+
+
 var app = builder.Build();
 
 app.UseMiddleware<CorrelationIdMiddleware>();

@@ -17,12 +17,12 @@ public class TokenServiceTests
     private const string UserId = "6a29ccb85c6f09702e1853de";
     private const string Email = "filipe@techsyslog.com";
 
-    private static TokenService Create(int expirationHours = 1) => new(Options.Create(new JwtSettings
+    private static TokenService Create(int expirationMinutes = 15) => new(Options.Create(new JwtSettings
     {
         Secret = "supersecretkey-minimum-32-characters-long!!",
         Issuer = "TechsysLog",
         Audience = "TechsysLogUsers",
-        ExpirationHours = expirationHours
+        AccessTokenExpirationMinutes = expirationMinutes
     }));
 
     [Fact]
@@ -71,13 +71,13 @@ public class TokenServiceTests
     [InlineData(1)]
     [InlineData(2)]
     [InlineData(24)]
-    public void GenerateAccessToken_ExpiresAfterConfiguredHours(int hours)
+    public void GenerateAccessToken_ExpiresAfterConfiguredMinutes(int minutes)
     {
         var before = DateTime.UtcNow;
-        var token = Create(expirationHours: hours).GenerateAccessToken(UserId, Email);
+        var token = Create(expirationMinutes: minutes).GenerateAccessToken(UserId, Email);
         var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
 
-        jwt.ValidTo.Should().BeCloseTo(before.AddHours(hours), TimeSpan.FromSeconds(5));
+        jwt.ValidTo.Should().BeCloseTo(before.AddMinutes(minutes), TimeSpan.FromSeconds(5));
     }
 
     [Fact]

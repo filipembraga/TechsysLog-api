@@ -23,25 +23,25 @@ public class MongoDbContext
 
     public IMongoCollection<User> Users => _database.GetCollection<User>("Users");
     public IMongoCollection<Order> Orders => _database.GetCollection<Order>("Orders");
-    public IMongoCollection<Notification> Notifications => _database.GetCollection<Notification>("Notifications");  
+    public IMongoCollection<Notification> Notifications => _database.GetCollection<Notification>("Notifications");
     public IMongoCollection<Delivery> Deliveries => _database.GetCollection<Delivery>("Deliveries");
-    public IMongoCollection<RefreshToken> RefreshTokens => _database.GetCollection<RefreshToken>("refreshTokens");
+    public IMongoCollection<RefreshToken> RefreshTokens => _database.GetCollection<RefreshToken>("RefreshTokens");
 
     private void CreateIndexes()
     {
         var emailIndex = Builders<User>.IndexKeys.Ascending(u => u.Email);
         Users.Indexes.CreateOne(new CreateIndexModel<User>(
-            emailIndex, 
+            emailIndex,
             new CreateIndexOptions { Unique = true }));
 
         var orderNumberIndex = Builders<Order>.IndexKeys.Ascending(o => o.OrderNumber);
         Orders.Indexes.CreateOne(new CreateIndexModel<Order>(
-            orderNumberIndex, 
+            orderNumberIndex,
             new CreateIndexOptions { Unique = true }));
 
         var notificationOrderIdIndex = Builders<Notification>.IndexKeys.Ascending(n => n.OrderId);
         Notifications.Indexes.CreateOne(new CreateIndexModel<Notification>(
-            notificationOrderIdIndex)); 
+            notificationOrderIdIndex));
 
         var deliveryOrderIdIndex = Builders<Delivery>.IndexKeys.Ascending(d => d.OrderId);
         Deliveries.Indexes.CreateOne(new CreateIndexModel<Delivery>(
