@@ -4,6 +4,7 @@ using Moq;
 using TechsysLog.Application.DTOs.Requests;
 using TechsysLog.Application.Interfaces;
 using TechsysLog.Application.Services;
+using TechsysLog.Domain.Entities;
 using TechsysLog.Domain.Enums;
 using TechsysLog.Domain.Interfaces;
 using TechsysLog.Domain.ValueObjects;
@@ -135,9 +136,12 @@ public class OrderServiceTests
             Amount = 50m,
             DeliveryAddress = new AddressDto
             {
-                ZipCode = "01310-100", Number = "1",
-                Street = string.Empty, Neighborhood = string.Empty,
-                City = string.Empty, State = string.Empty
+                ZipCode = "01310-100",
+                Number = "1",
+                Street = string.Empty,
+                Neighborhood = string.Empty,
+                City = string.Empty,
+                State = string.Empty
             }
         };
 
@@ -195,5 +199,27 @@ public class OrderServiceTests
         var result = await _sut.GetByOrderNumberAsync("ORD-99999");
 
         result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetAllByUserIdAsync_ReturnsOrdersForGivenUser()
+    {
+        // Arrange
+        var userId = "6a29ccb85c6f09702e1853de";
+        var orders = new List<Order>
+        {
+            new OrderBuilder().WithUserId(userId).Build(),
+            new OrderBuilder().WithUserId(userId).Build()
+        };
+
+        _orderRepositoryMock
+            .Setup(r => r.GetAllByUserIdAsync(userId))
+            .ReturnsAsync(orders);
+
+        // Act
+        var result = await _sut.GetAllByUserIdAsync(userId);
+
+        // Assert
+        result.Should().HaveCount(2);
     }
 }

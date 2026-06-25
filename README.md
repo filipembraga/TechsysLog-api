@@ -8,34 +8,34 @@ API REST para gerenciamento de pedidos e entregas em contexto logístico, desenv
 
 ## Números
 
-| | |
-|---|---|
-| 🏗️ Camadas arquiteturais | 4 (+ API entrypoint) |
-| ✅ Testes automatizados | 60 |
-| 📋 ADRs documentadas | 4 |
-| 🔐 Endpoints de domínio protegidos por JWT | 100% |
+|                                            |                      |
+| ------------------------------------------ | -------------------- |
+| 🏗️ Camadas arquiteturais                   | 4 (+ API entrypoint) |
+| ✅ Testes automatizados                    | 75                   |
+| 📋 ADRs documentadas                       | 5                    |
+| 🔐 Endpoints de domínio protegidos por JWT | 100%                 |
 
 ---
 
 ## Stack
 
-| Categoria | Tecnologia |
-|-----------|-----------|
-| Runtime | .NET 10 / ASP.NET Core |
-| Banco de dados | MongoDB (`MongoDB.Driver`) |
-| Tempo real | SignalR (WebSockets) |
-| Autenticação | JWT (`System.IdentityModel.Tokens.Jwt`) |
-| Testes | xUnit + Moq + FluentAssertions |
-| Documentação | OpenAPI + Scalar UI |
+| Categoria      | Tecnologia                              |
+| -------------- | --------------------------------------- |
+| Runtime        | .NET 10 / ASP.NET Core                  |
+| Banco de dados | MongoDB (`MongoDB.Driver`)              |
+| Tempo real     | SignalR (WebSockets)                    |
+| Autenticação   | JWT (`System.IdentityModel.Tokens.Jwt`) |
+| Testes         | xUnit + Moq + FluentAssertions          |
+| Documentação   | OpenAPI + Scalar UI                     |
 
 ---
 
 ## Repositórios
 
-| | |
-|---|---|
-| 🔧 **Backend** (este repositório) | API REST, Clean Architecture, MongoDB, SignalR |
-| 🖥️ **Frontend** | [github.com/filipembraga/TechsysLog-frontend](https://github.com/filipembraga/TechsysLog-frontend) — React + Vite + TanStack Query + SignalR |
+|                                   |                                                                                                                                              |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🔧 **Backend** (este repositório) | API REST, Clean Architecture, MongoDB, SignalR                                                                                               |
+| 🖥️ **Frontend**                   | [github.com/filipembraga/TechsysLog-frontend](https://github.com/filipembraga/TechsysLog-frontend) — React + Vite + TanStack Query + SignalR |
 
 ---
 
@@ -80,11 +80,12 @@ O domínio é centrado em documentos: pedidos contêm endereços embutidos, noti
 Usar MongoDB com `MongoDB.Driver` diretamente, sem a camada de abstração do EF Core. Indexes são definidos em código (`MongoDbContext`) para garantir configuração correta em qualquer ambiente.
 
 **Consequências**
-+ Modelo de documento alinha-se naturalmente com as entidades do domínio
-+ Queries tipadas via `Builders<T>` são refactor-safe — renomear uma propriedade gera erro de compilação, não falha silenciosa em runtime
-+ Sem migrations — schema evolui junto com o código
-− Sem suporte nativo a transações ACID entre coleções (não necessário neste escopo)
-− Equipes familiarizadas apenas com SQL têm curva de aprendizado maior
+
+- Modelo de documento alinha-se naturalmente com as entidades do domínio
+- Queries tipadas via `Builders<T>` são refactor-safe — renomear uma propriedade gera erro de compilação, não falha silenciosa em runtime
+- Sem migrations — schema evolui junto com o código
+  − Sem suporte nativo a transações ACID entre coleções (não necessário neste escopo)
+  − Equipes familiarizadas apenas com SQL têm curva de aprendizado maior
 
 </details>
 
@@ -100,10 +101,11 @@ Notificações de criação de pedido e registro de entrega precisam chegar ao c
 Usar SignalR com WebSockets como transporte primário. A abstração `INotificationDispatcher` isola o transporte na camada de Infrastructure — a camada Application nunca referencia SignalR diretamente.
 
 **Consequências**
-+ Notificações em tempo real sem overhead de polling
-+ Trocar SignalR por outro mecanismo (SSE, Kafka consumer, etc.) requer apenas nova implementação de `INotificationDispatcher`, sem mudanças nos serviços
-− Requer conexão persistente (WebSocket), que pode ser limitada em alguns ambientes de hospedagem
-− Broadcast para todos os clientes conectados neste escopo — evolução natural seria SignalR Groups para targeting por usuário
+
+- Notificações em tempo real sem overhead de polling
+- Trocar SignalR por outro mecanismo (SSE, Kafka consumer, etc.) requer apenas nova implementação de `INotificationDispatcher`, sem mudanças nos serviços
+  − Requer conexão persistente (WebSocket), que pode ser limitada em alguns ambientes de hospedagem
+  − Broadcast para todos os clientes conectados neste escopo — evolução natural seria SignalR Groups para targeting por usuário
 
 </details>
 
@@ -119,9 +121,10 @@ Pedidos precisam ser identificados em comunicações entre clientes e equipe de 
 Números de pedido no formato `ORD-00001` gerados sequencialmente via `CountAsync() + 1`. O MongoDB ObjectId continua sendo o identificador interno usado nas rotas REST.
 
 **Consequências**
-+ Números legíveis e memorizáveis para operações e suporte
-+ Rotas protegidas por JWT com filtro por `UserId` previnem ataques de enumeração
-− Em cenário de alta concorrência, `CountAsync() + 1` pode gerar colisões — a solução correta seria um counter atômico via `$inc` no MongoDB ou sequence generator dedicado
+
+- Números legíveis e memorizáveis para operações e suporte
+- Rotas protegidas por JWT com filtro por `UserId` previnem ataques de enumeração
+  − Em cenário de alta concorrência, `CountAsync() + 1` pode gerar colisões — a solução correta seria um counter atômico via `$inc` no MongoDB ou sequence generator dedicado
 
 </details>
 
@@ -137,9 +140,33 @@ CQRS foi avaliado dado o uso de MongoDB, que se presta naturalmente a modelos de
 CQRS não foi implementado. Os métodos de serviço atuais são simples o suficiente para não justificar a separação de Commands e Queries com seus respectivos Handlers e o overhead de infraestrutura associado.
 
 **Consequências**
-+ Código mais simples e direto para o escopo atual
-+ Menor barreira de entrada para novos desenvolvedores
-− Se os modelos de leitura e escrita divergirem significativamente em uma evolução futura, refatorar para CQRS exigirá mais esforço do que adotá-lo desde o início
+
+- Código mais simples e direto para o escopo atual
+- Menor barreira de entrada para novos desenvolvedores
+  − Se os modelos de leitura e escrita divergirem significativamente em uma evolução futura, refatorar para CQRS exigirá mais esforço do que adotá-lo desde o início
+
+</details>
+
+<details>
+<summary><strong>ADR-005 — Refresh Token via cookie httpOnly, sem rotação</strong></summary>
+
+**Status:** Aceito
+
+**Contexto**
+O Access Token (JWT) tinha validade de 1 hora e ficava exposto via `localStorage` no frontend — vulnerável a XSS, e sem renovação automática. Era necessário separar "prova de identidade de curta duração" de "permissão de sessão de longa duração".
+
+**Decisão**
+Access Token reduzido para 15 minutos (configurável via `Jwt:AccessTokenExpirationMinutes`), com claim `iat` padrão (RFC 7519) para auditoria. Refresh Token opaco (256 bits aleatórios, `RandomNumberGenerator`) emitido junto, com hash SHA-256 persistido na collection `RefreshTokens` (nunca o valor puro) e TTL index para expiração automática (7 dias). O valor puro só existe no cookie `httpOnly`, `Secure`, `SameSite=Strict`, restrito ao path `/api/auth/refresh`. `JwtService` foi renomeado para `TokenService`/`ITokenService` — ele emite os dois tipos de token, não só o JWT.
+
+Sem rotação a cada uso: o Refresh Token permanece o mesmo até expirar. `ClockSkew` configurado explicitamente (não o padrão de 5 minutos do `Microsoft.IdentityModel`), valor pequeno e deliberado pensando em múltiplas instâncias (Docker/ECS) com possível drift de relógio.
+
+**Consequências**
+
+- Token de longa duração nunca acessível via JavaScript (mitiga XSS)
+- Renovação de sessão sem exigir login a cada 15 minutos
+- `TokenHasher` (`Domain/Common`) reutilizável caso outro tipo de token precise de hash no futuro
+  − Sem rotação, um Refresh Token comprometido permanece válido até expirar ou logout — rotação com detecção de reuso é a evolução natural se o projeto ganhar usuários reais
+  − CSRF mitigado por `SameSite=Strict`, sem CSRF token dedicado — avaliado como suficiente para o escopo atual
 
 </details>
 
@@ -202,7 +229,7 @@ C4Component
         Component(orderSvc, "OrderService", "C# Service", "Criação e consulta de pedidos, enriquecimento de endereço")
         Component(deliverySvc, "DeliveryService", "C# Service", "Registro de entregas, atualização de status do pedido")
         Component(notifSvc, "NotificationService", "C# Service", "Envio e leitura de notificações")
-        Component(jwtSvc, "JwtService", "C# Service", "Geração de tokens JWT")
+        Component(jwtSvc, "TokenService", "C# Service", "Geração de tokens JWT e Refresh Token")
     }
     Container(api, "TechsysLog.API", "ASP.NET Core", "")
     Container(infra, "TechsysLog.Infrastructure", ".NET 10", "")
@@ -211,7 +238,7 @@ C4Component
     Rel(api, orderSvc, "IOrderService")
     Rel(api, deliverySvc, "IDeliveryService")
     Rel(api, notifSvc, "INotificationService")
-    Rel(userSvc, jwtSvc, "IJwtService")
+    Rel(userSvc, jwtSvc, "ITokenService")
     Rel(orderSvc, infra, "IOrderRepository, IAddressLookupService, INotificationDispatcher")
     Rel(deliverySvc, infra, "IDeliveryRepository, IOrderRepository, INotificationDispatcher")
     Rel(notifSvc, infra, "INotificationRepository, INotificationDispatcher")
@@ -226,20 +253,21 @@ TechsysLog/
 ├── TechsysLog.sln
 │
 ├── TechsysLog.Domain/
-│   ├── Entities/          — User, Order, Delivery, Notification
+│   ├── Entities/          — User, Order, Delivery, Notification, RefreshToken
 │   ├── ValueObjects/      — Address (imutável, igualdade por valor)
 │   ├── Enums/             — OrderStatus
-│   └── Interfaces/        — IRepository*, INotificationDispatcher, IAddressLookupService
+│   ├── Common/            — TokenHasher (hash SHA-256, sem interface — função pura)
+│   └── Interfaces/        — IRepository*, INotificationDispatcher, IAddressLookupService, IRefreshTokenRepository
 │
 ├── TechsysLog.Application/
 │   ├── DTOs/              — Requests e Responses (UserBaseDto compartilhado entre UserResponseDto e LoginResponseDto)
-│   ├── Services/          — UserService, OrderService, DeliveryService, NotificationService, JwtService
+│   ├── Services/          — UserService, OrderService, DeliveryService, NotificationService, TokenService
 │   ├── Interfaces/        — Contratos de serviço
 │   └── Settings/          — JwtSettings
 │
 ├── TechsysLog.Infrastructure/
-│   ├── Context/           — MongoDbContext (indexes definidos em código)
-│   ├── Repositories/      — UserRepository, OrderRepository, DeliveryRepository, NotificationRepository
+│   ├── Context/           — MongoDbContext (indexes definidos em código, incluindo TTL index em RefreshTokens)
+│   ├── Repositories/      — UserRepository, OrderRepository, DeliveryRepository, NotificationRepository, RefreshTokenRepository
 │   ├── ExternalServices/  — ViaCepClient (ViaCepResponseDto é internal)
 │   └── WebSockets/        — SignalRNotificationDispatcher, NotificationHub
 │
@@ -318,38 +346,38 @@ dotnet test
 
 ### Qualidade
 
-| | |
-|---|---|
-| Testes automatizados | 60 |
-| Cobertura — Application (linha) | 98.2% |
-| Cobertura — API (linha) | 100% |
-| Cobertura — Domain (linha) | 100% |
-| Stack de testes | xUnit + Moq + FluentAssertions 7 (MIT) |
+|                                 |                                        |
+| ------------------------------- | -------------------------------------- |
+| Testes automatizados            | 75                                     |
+| Cobertura — Application (linha) | 100%                                   |
+| Cobertura — API (linha)         | 100%                                   |
+| Cobertura — Domain (linha)      | 100%                                   |
+| Stack de testes                 | xUnit + Moq + FluentAssertions 7 (MIT) |
 
 ### Estratégia de testes
 
 O middleware global de tratamento de exceções foi testado intencionalmente com base nas ideias discutidas em:
 
-> Yuan et al. — *"Simple Testing Can Prevent Most Critical Failures"*
+> Yuan et al. — _"Simple Testing Can Prevent Most Critical Failures"_
 
 O estudo demonstra que falhas no tratamento de erros estão entre as principais causas de incidentes catastróficos em sistemas de software. Por esse motivo, todas as ramificações de exceção do middleware possuem cobertura automatizada, validando mapeamento correto para códigos HTTP, respostas seguras ao cliente, ausência de vazamento de detalhes internos e preservação do fluxo normal de execução.
 
-| Camada | Abordagem |
-|--------|-----------|
-| Application services | Testes unitários com Moq — `UserService`, `OrderService`, `DeliveryService`, `NotificationService` |
-| API controllers | Testes unitários com `ClaimsPrincipal` injetado — simula autenticação JWT sem pipeline HTTP completo |
-| Builder pattern | `UserBuilder`, `OrderBuilder`, `NotificationBuilder` — dados de teste consistentes sem repetição |
-| Infrastructure | Não coberta por testes unitários — repositórios são mais adequados para testes de integração contra banco real |
+| Camada               | Abordagem                                                                                                      |
+| -------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Application services | Testes unitários com Moq — `UserService`, `OrderService`, `DeliveryService`, `NotificationService`             |
+| API controllers      | Testes unitários com `ClaimsPrincipal` injetado — simula autenticação JWT sem pipeline HTTP completo           |
+| Builder pattern      | `UserBuilder`, `OrderBuilder`, `NotificationBuilder` — dados de teste consistentes sem repetição               |
+| Infrastructure       | Não coberta por testes unitários — repositórios são mais adequados para testes de integração contra banco real |
 
 ### Cobertura por camada
 
-| Camada | Linha | Branch | Método | Observação |
-|--------|-------|--------|--------|------------|
-| Application | 98.2% | 95.5% | 95.7% | Services — core do negócio |
-| API | 100% | 93.8% | 100% | Controllers + `ExceptionHandlingMiddleware` |
-| Domain | 100% | 100% | 100% | Entidades e `Address` value object |
-| Infrastructure | excluída | — | — | Candidata a testes de integração |
-| CrossCutting | excluída | — | — | DI composition root — sem lógica testável |
+| Camada         | Linha    | Branch | Observação                                |
+| -------------- | -------- | ------ | ----------------------------------------- |
+| Application    | 100%     | 96.4%  | Services — core do negócio                |
+| API            | 100%     | 95.5%  | Controllers + Middleware                  |
+| Domain         | 100%     | 100%   | Entidades, `Address`, `TokenHasher`       |
+| Infrastructure | excluída | —      | Candidata a testes de integração          |
+| CrossCutting   | excluída | —      | DI composition root — sem lógica testável |
 
 ---
 
@@ -360,13 +388,13 @@ O estudo demonstra que falhas no tratamento de erros estão entre as principais 
 
 ### Implementado
 
-| Mecanismo | Implementação |
-|-----------|--------------|
-| **Logging estruturado** | `ILogger<T>` injetado nos serviços; logs com nível (`Information`, `Warning`, `Error`) e parâmetros nomeados (`{ZipCode}`, `{OrderId}`) |
-| **Tratamento global de erros** | `ExceptionHandlingMiddleware` intercepta todas as exceções não tratadas e retorna respostas padronizadas com `statusCode` e `message` — stack traces nunca vazam para o cliente |
-| **Log de degradação** | Falhas no ViaCEP são registradas como `LogWarning` com contexto completo — sem interrupção do fluxo principal |
-| **Correlation ID** | `CorrelationIdMiddleware` injeta `X-Correlation-Id` em cada request — gerado no backend se não enviado pelo cliente, propagado nos logs via `BeginScope` e exposto na response header para rastreabilidade end-to-end |
-| **Health Checks** | `GET /health` (liveness) e `GET /health/ready` (readiness com probe MongoDB) — endpoints padronizados para integração com orquestradores e load balancers |
+| Mecanismo                      | Implementação                                                                                                                                                                                                         |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Logging estruturado**        | `ILogger<T>` injetado nos serviços; logs com nível (`Information`, `Warning`, `Error`) e parâmetros nomeados (`{ZipCode}`, `{OrderId}`)                                                                               |
+| **Tratamento global de erros** | `ExceptionHandlingMiddleware` intercepta todas as exceções não tratadas e retorna respostas padronizadas com `statusCode` e `message` — stack traces nunca vazam para o cliente                                       |
+| **Log de degradação**          | Falhas no ViaCEP são registradas como `LogWarning` com contexto completo — sem interrupção do fluxo principal                                                                                                         |
+| **Correlation ID**             | `CorrelationIdMiddleware` injeta `X-Correlation-Id` em cada request — gerado no backend se não enviado pelo cliente, propagado nos logs via `BeginScope` e exposto na response header para rastreabilidade end-to-end |
+| **Health Checks**              | `GET /health` (liveness) e `GET /health/ready` (readiness com probe MongoDB) — endpoints padronizados para integração com orquestradores e load balancers                                                             |
 
 ### Próximos passos recomendados
 
@@ -409,12 +437,12 @@ Contadores e histogramas via `System.Diagnostics.Metrics` (nativo no .NET) para 
 
 ### Implementado
 
-| Padrão | Implementação |
-|--------|--------------|
-| **Graceful degradation** | Falha no ViaCEP não interrompe a criação do pedido — o endereço fornecido pelo usuário é usado como fallback com `Trim()` e `ToUpper()` no campo `state` |
-| **Failure isolation** | `ExceptionHandlingMiddleware` garante que exceções não tratadas não vazam stack traces para o cliente |
-| **Logging de falha contextualizado** | Erros em dependências externas são logados com contexto completo (`ZipCode`, tipo da exceção) sem propagar para o chamador |
-| **Retry + Circuit Breaker** | `ViaCepClient` protegido com pipeline Polly via `Microsoft.Extensions.Http.Resilience` — 3 retries com backoff exponencial (200ms base), circuit breaker com threshold de 50% em janela de 30s, timeout de 3s por tentativa. Configurado em `ViaCepClientExtensions` na camada Infrastructure, transparente para Application |
+| Padrão                               | Implementação                                                                                                                                                                                                                                                                                                                |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Graceful degradation**             | Falha no ViaCEP não interrompe a criação do pedido — o endereço fornecido pelo usuário é usado como fallback com `Trim()` e `ToUpper()` no campo `state`                                                                                                                                                                     |
+| **Failure isolation**                | `ExceptionHandlingMiddleware` garante que exceções não tratadas não vazam stack traces para o cliente                                                                                                                                                                                                                        |
+| **Logging de falha contextualizado** | Erros em dependências externas são logados com contexto completo (`ZipCode`, tipo da exceção) sem propagar para o chamador                                                                                                                                                                                                   |
+| **Retry + Circuit Breaker**          | `ViaCepClient` protegido com pipeline Polly via `Microsoft.Extensions.Http.Resilience` — 3 retries com backoff exponencial (200ms base), circuit breaker com threshold de 50% em janela de 30s, timeout de 3s por tentativa. Configurado em `ViaCepClientExtensions` na camada Infrastructure, transparente para Application |
 
 ### Próximos passos recomendados
 
@@ -492,12 +520,12 @@ O domínio de pedidos e entregas tem histórico imutável por natureza (`Pending
 
 **Tecnologias avaliadas**
 
-| Tecnologia | Caso de uso |
-|------------|-------------|
-| **Kafka** | Alto volume, retenção de eventos longa, múltiplos consumers independentes |
-| **RabbitMQ** | Roteamento flexível, menor overhead operacional, dead-letter queues nativas |
-| **MassTransit** | Abstração sobre Kafka/RabbitMQ, sagas, outbox pattern nativo |
-| **Redis Streams** | Alternativa leve se Redis já estiver no stack para cache |
+| Tecnologia        | Caso de uso                                                                 |
+| ----------------- | --------------------------------------------------------------------------- |
+| **Kafka**         | Alto volume, retenção de eventos longa, múltiplos consumers independentes   |
+| **RabbitMQ**      | Roteamento flexível, menor overhead operacional, dead-letter queues nativas |
+| **MassTransit**   | Abstração sobre Kafka/RabbitMQ, sagas, outbox pattern nativo                |
+| **Redis Streams** | Alternativa leve se Redis já estiver no stack para cache                    |
 
 </details>
 
@@ -517,45 +545,48 @@ Os documentos mostram o modelo de dados em produção: `OrderNumber` sequencial 
 
 ### Auth
 
-| Método | Rota | Auth | Descrição |
-|--------|------|------|-----------|
-| `POST` | `/api/auth/register` | ✗ | Registra novo usuário |
-| `POST` | `/api/auth/login` | ✗ | Autentica e retorna token JWT + dados do usuário |
+| Método | Rota                 | Auth       | Descrição                                                                      |
+| ------ | -------------------- | ---------- | ------------------------------------------------------------------------------ |
+| `POST` | `/api/auth/register` | ✗          | Registra novo usuário                                                          |
+| `POST` | `/api/auth/login`    | ✗          | Autentica. Devolve Access Token no corpo + Refresh Token via cookie `httpOnly` |
+| `POST` | `/api/auth/refresh`  | ✗ (cookie) | Renova o Access Token a partir do Refresh Token no cookie                      |
+| `POST` | `/api/auth/logout`   | ✗ (cookie) | Invalida o Refresh Token (Mongo) e expira o cookie                             |
 
 ### Pedidos
 
-| Método | Rota | Auth | Descrição |
-|--------|------|------|-----------|
-| `POST` | `/api/orders` | ✓ | Cria pedido. Endereço é enriquecido automaticamente via ViaCEP |
-| `GET` | `/api/orders` | ✓ | Lista pedidos do usuário autenticado |
-| `GET` | `/api/orders/{id}` | ✓ | Retorna pedido por MongoDB ObjectId |
-| `GET` | `/api/orders/number/{orderNumber}` | ✓ | Retorna pedido por número legível (ex: `ORD-00001`) |
+| Método | Rota                               | Auth | Descrição                                                      |
+| ------ | ---------------------------------- | ---- | -------------------------------------------------------------- |
+| `POST` | `/api/orders`                      | ✓    | Cria pedido. Endereço é enriquecido automaticamente via ViaCEP |
+| `GET`  | `/api/orders`                      | ✓    | Lista pedidos do usuário autenticado                           |
+| `GET`  | `/api/orders/{id}`                 | ✓    | Retorna pedido por MongoDB ObjectId                            |
+| `GET`  | `/api/orders/number/{orderNumber}` | ✓    | Retorna pedido por número legível (ex: `ORD-00001`)            |
 
 ### Entregas
 
-| Método | Rota | Auth | Descrição |
-|--------|------|------|-----------|
-| `POST` | `/api/deliveries` | ✓ | Registra entrega. Atualiza status do pedido para `Delivered` automaticamente |
-| `GET` | `/api/deliveries/{orderId}` | ✓ | Retorna entrega de um pedido específico |
+| Método | Rota                        | Auth | Descrição                                                                    |
+| ------ | --------------------------- | ---- | ---------------------------------------------------------------------------- |
+| `POST` | `/api/deliveries`           | ✓    | Registra entrega. Atualiza status do pedido para `Delivered` automaticamente |
+| `GET`  | `/api/deliveries/{orderId}` | ✓    | Retorna entrega de um pedido específico                                      |
 
 ### Notificações
 
-| Método | Rota | Auth | Descrição |
-|--------|------|------|-----------|
-| `GET` | `/api/notifications` | ✓ | Retorna todas as notificações |
-| `GET` | `/api/notifications/unread` | ✓ | Retorna apenas notificações não lidas |
-| `PATCH` | `/api/notifications/{id}/read` | ✓ | Marca notificação como lida para o usuário autenticado |
+| Método  | Rota                           | Auth | Descrição                                              |
+| ------- | ------------------------------ | ---- | ------------------------------------------------------ |
+| `GET`   | `/api/notifications`           | ✓    | Retorna todas as notificações                          |
+| `GET`   | `/api/notifications/unread`    | ✓    | Retorna apenas notificações não lidas                  |
+| `PATCH` | `/api/notifications/{id}/read` | ✓    | Marca notificação como lida para o usuário autenticado |
 
 ### Observabilidade
 
-| Método | Rota | Auth | Descrição |
-|--------|------|------|-----------|
-| `GET` | `/health` | ✗ | Liveness — verifica se o processo está de pé |
-| `GET` | `/health/ready` | ✗ | Readiness — verifica se o MongoDB está disponível |
+| Método | Rota            | Auth | Descrição                                         |
+| ------ | --------------- | ---- | ------------------------------------------------- |
+| `GET`  | `/health`       | ✗    | Liveness — verifica se o processo está de pé      |
+| `GET`  | `/health/ready` | ✗    | Readiness — verifica se o MongoDB está disponível |
 
 ### Exemplo — Criar pedido
 
 **Request**
+
 ```json
 POST /api/orders
 Authorization: Bearer {token}
@@ -575,12 +606,13 @@ Authorization: Bearer {token}
 ```
 
 **`201 Created`**
+
 ```json
 {
   "id": "6a2a344d034b3271f27a233c",
   "orderNumber": "ORD-00001",
   "description": "Notebook Dell XPS",
-  "amount": 8500.00,
+  "amount": 8500.0,
   "deliveryAddress": {
     "zipCode": "01310-100",
     "street": "Avenida Paulista",
@@ -596,6 +628,7 @@ Authorization: Bearer {token}
 ```
 
 **`404 Not Found`**
+
 ```json
 { "statusCode": 404, "message": "Order 6a2a344d034b3271f27a233c not found." }
 ```
@@ -603,6 +636,7 @@ Authorization: Bearer {token}
 ### Exemplo — Login
 
 **`200 OK`**
+
 ```json
 {
   "token": "eyJhbGciOiJIUzI1NiIs...",
@@ -628,15 +662,15 @@ Escute o evento `ReceiveNotification` para receber atualizações em tempo real 
 
 ## O que Ficou de Fora
 
-| Item | Motivo |
-|------|--------|
-| **Refresh tokens** | Expiração JWT configurada em 1 hora. Refresh tokens adicionam complexidade fora do escopo deste desafio |
-| **SignalR por usuário** | Notificações são broadcast para todos os clientes conectados. Targeting por usuário exigiria SignalR Groups — documentado como próximo passo natural |
-| **Paginação** | Não implementada dado o volume de dados esperado no contexto do desafio. A arquitetura suporta adição sem breaking changes |
-| **Docker** | Não exigido pelo desafio, mas a arquitetura suporta containerização sem mudanças em nenhuma camada |
-| **Testes de integração** | Infrastructure excluída da cobertura unitária. Testes de integração contra MongoDB real seriam o próximo passo para validar corretude das queries |
-| **CQRS** | Avaliado e rejeitado para este escopo — ver [ADR-004](#adr-004--cqrs-rejeitado) |
-| **Cache de CEP com Redis** | ViaCEP é gratuito e rápido — Redis adicionaria dependência operacional sem ganho mensurável no escopo atual. Documentado como próximo passo em Resiliência |
+| Item                       | Motivo                                                                                                                                                                                                                                            |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Refresh Token Rotation** | (Estratégia sem rotação) implementada — ver [ADR-005](#adr-005--refresh-token-via-cookie-httponly-sem-rotação). Rotação com detecção de reuso avaliada como over-engineering para o estágio atual, mas mapeada para os próximos projetos pessoais |
+| **SignalR por usuário**    | Notificações são broadcast para todos os clientes conectados. Targeting por usuário exigiria SignalR Groups — documentado como próximo passo natural                                                                                              |
+| **Paginação**              | Não implementada dado o volume de dados esperado no contexto do desafio. A arquitetura suporta adição sem breaking changes                                                                                                                        |
+| **Docker**                 | Não exigido pelo desafio, mas a arquitetura suporta containerização sem mudanças em nenhuma camada                                                                                                                                                |
+| **Testes de integração**   | Infrastructure excluída da cobertura unitária. Testes de integração contra MongoDB real seriam o próximo passo para validar corretude das queries                                                                                                 |
+| **CQRS**                   | Avaliado e rejeitado para este escopo — ver [ADR-004](#adr-004--cqrs-rejeitado)                                                                                                                                                                   |
+| **Cache de CEP com Redis** | ViaCEP é gratuito e rápido — Redis adicionaria dependência operacional sem ganho mensurável no escopo atual. Documentado como próximo passo em Resiliência                                                                                        |
 
 ---
 
@@ -650,7 +684,9 @@ The frontend client is available at [TechsysLog-frontend](https://github.com/fil
 
 The solution follows **Clean Architecture** with four independent layers: **Domain** (entities, value objects, repository interfaces — no external dependencies), **Application** (services, DTOs, service interfaces), **Infrastructure** (MongoDB repositories, ViaCEP HTTP client, SignalR dispatcher), and **CrossCutting** (the composition root — the only project aware of all layers). The **API** references only Application and CrossCutting, never Infrastructure directly.
 
-Key decisions documented as ADRs: MongoDB over SQL ([ADR-001](#adr-001--mongodb-sobre-sql)), SignalR over polling with transport abstraction via `INotificationDispatcher` ([ADR-002](#adr-002--signalr-sobre-polling)), sequential order numbers (`ORD-00001`) over GUIDs ([ADR-003](#adr-003--número-de-pedido-sequencial-sobre-guid)), and CQRS rejected as premature ([ADR-004](#adr-004--cqrs-rejeitado)). Observability additions post-challenge: `CorrelationIdMiddleware` for per-request traceability via `X-Correlation-Id` header and log scope propagation; health check endpoints (`/health`, `/health/ready`) with MongoDB readiness probe implemented as `IHealthCheck` in the Infrastructure layer.
+KKey decisions documented as ADRs: MongoDB over SQL ([ADR-001](#adr-001--mongodb-sobre-sql)), SignalR over polling with transport abstraction via `INotificationDispatcher` ([ADR-002](#adr-002--signalr-sobre-polling)), sequential order numbers (`ORD-00001`) over GUIDs ([ADR-003](#adr-003--número-de-pedido-sequencial-sobre-guid)), CQRS rejected as premature ([ADR-004](#adr-004--cqrs-rejeitado)), and a short-lived JWT access token paired with an httpOnly refresh token cookie, without rotation ([ADR-005](#adr-005--refresh-token-via-cookie-httponly-sem-rotação)).
+
+Observability additions post-challenge: `CorrelationIdMiddleware` for per-request traceability via `X-Correlation-Id` header and log scope propagation; health check endpoints (`/health`, `/health/ready`) with MongoDB readiness probe implemented as `IHealthCheck` in the Infrastructure layer.
 
 ### Running
 

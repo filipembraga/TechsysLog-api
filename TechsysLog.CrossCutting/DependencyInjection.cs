@@ -39,6 +39,7 @@ public static class DependencyInjection
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IDeliveryRepository, DeliveryRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<INotificationDispatcher, SignalRNotificationDispatcher>();
 
         return services;
@@ -49,7 +50,7 @@ public static class DependencyInjection
         IConfiguration configuration)
     {
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
-        services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<ITokenService, TokenService>();
 
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IOrderService, OrderService>();
