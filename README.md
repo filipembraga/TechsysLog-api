@@ -11,7 +11,7 @@ API REST para gerenciamento de pedidos e entregas em contexto logístico, desenv
 |                                            |                      |
 | ------------------------------------------ | -------------------- |
 | 🏗️ Camadas arquiteturais                   | 4 (+ API entrypoint) |
-| ✅ Testes automatizados                    | 60                   |
+| ✅ Testes automatizados                    | 75                   |
 | 📋 ADRs documentadas                       | 5                    |
 | 🔐 Endpoints de domínio protegidos por JWT | 100%                 |
 
@@ -348,8 +348,8 @@ dotnet test
 
 |                                 |                                        |
 | ------------------------------- | -------------------------------------- |
-| Testes automatizados            | 60                                     |
-| Cobertura — Application (linha) | 98.2%                                  |
+| Testes automatizados            | 75                                     |
+| Cobertura — Application (linha) | 100%                                   |
 | Cobertura — API (linha)         | 100%                                   |
 | Cobertura — Domain (linha)      | 100%                                   |
 | Stack de testes                 | xUnit + Moq + FluentAssertions 7 (MIT) |
@@ -371,13 +371,13 @@ O estudo demonstra que falhas no tratamento de erros estão entre as principais 
 
 ### Cobertura por camada
 
-| Camada         | Linha    | Branch | Método | Observação                                  |
-| -------------- | -------- | ------ | ------ | ------------------------------------------- |
-| Application    | 98.2%    | 95.5%  | 95.7%  | Services — core do negócio                  |
-| API            | 100%     | 93.8%  | 100%   | Controllers + `ExceptionHandlingMiddleware` |
-| Domain         | 100%     | 100%   | 100%   | Entidades e `Address` value object          |
-| Infrastructure | excluída | —      | —      | Candidata a testes de integração            |
-| CrossCutting   | excluída | —      | —      | DI composition root — sem lógica testável   |
+| Camada         | Linha    | Branch | Observação                                |
+| -------------- | -------- | ------ | ----------------------------------------- |
+| Application    | 100%     | 96.4%  | Services — core do negócio                |
+| API            | 100%     | 95.5%  | Controllers + Middleware                  |
+| Domain         | 100%     | 100%   | Entidades, `Address`, `TokenHasher`       |
+| Infrastructure | excluída | —      | Candidata a testes de integração          |
+| CrossCutting   | excluída | —      | DI composition root — sem lógica testável |
 
 ---
 
