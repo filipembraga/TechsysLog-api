@@ -11,7 +11,7 @@ API REST para gerenciamento de pedidos e entregas em contexto logístico, desenv
 |                                            |                      |
 | ------------------------------------------ | -------------------- |
 | 🏗️ Camadas arquiteturais                   | 4 (+ API entrypoint) |
-| ✅ Testes automatizados                    | 75                   |
+| ✅ Testes automatizados                    | 67                   |
 | 📋 ADRs documentadas                       | 5                    |
 | 🔐 Endpoints de domínio protegidos por JWT | 100%                 |
 
@@ -348,9 +348,9 @@ dotnet test
 
 |                                 |                                        |
 | ------------------------------- | -------------------------------------- |
-| Testes automatizados            | 75                                     |
-| Cobertura — Application (linha) | 100%                                   |
-| Cobertura — API (linha)         | 100%                                   |
+| Testes automatizados            | 67                                     |
+| Cobertura — Application (linha) | 98.9%                                  |
+| Cobertura — API (linha)         | 96.6%                                  |
 | Cobertura — Domain (linha)      | 100%                                   |
 | Stack de testes                 | xUnit + Moq + FluentAssertions 7 (MIT) |
 
@@ -361,6 +361,15 @@ O middleware global de tratamento de exceções foi testado intencionalmente com
 > Yuan et al. — _"Simple Testing Can Prevent Most Critical Failures"_
 
 O estudo demonstra que falhas no tratamento de erros estão entre as principais causas de incidentes catastróficos em sistemas de software. Por esse motivo, todas as ramificações de exceção do middleware possuem cobertura automatizada, validando mapeamento correto para códigos HTTP, respostas seguras ao cliente, ausência de vazamento de detalhes internos e preservação do fluxo normal de execução.
+
+#### Saúde da suíte de testes
+
+A suíte passou por uma auditoria deliberada (75 → 67 testes) com dois movimentos distintos, não um simples corte:
+
+- **Remoção** de testes que validavam apenas comportamento do framework ou do Moq (ex: verificar que um mock foi chamado, sem nenhuma asserção sobre resultado), ou que duplicavam cobertura já garantida em outro lugar — como propagação de exceção em controllers, já testada ponta a ponta em `ExceptionHandlingMiddlewareTests`.
+- **Fortalecimento** de testes que existiam mas validavam pouco do comportamento real — ex: o mapeamento `Notification → NotificationResponseDto` tinha dois testes que checavam só `Count`/`IsRead`; passaram a validar os 7 campos do mapeamento. Dois branches de sucesso de controller (`GetByIdAsync`, `GetByOrderNumberAsync`) que tinham perdido cobertura na remoção inicial foram reavaliados e recriados, por protegerem um branch real (`null ? NotFound : Ok`), não passthrough puro.
+
+Resultado: cobertura de **linha** caiu ligeiramente (esperado — menos testes redundantes); cobertura de **branch** também recuou, de forma marginal. Número de testes não é proxy de qualidade — um teste que só verifica `Times.Once` infla a contagem sem proteger nada.
 
 | Camada               | Abordagem                                                                                                      |
 | -------------------- | -------------------------------------------------------------------------------------------------------------- |
@@ -373,9 +382,9 @@ O estudo demonstra que falhas no tratamento de erros estão entre as principais 
 
 | Camada         | Linha    | Branch | Observação                                |
 | -------------- | -------- | ------ | ----------------------------------------- |
-| Application    | 100%     | 96.4%  | Services — core do negócio                |
-| API            | 100%     | 95.5%  | Controllers + Middleware                  |
-| Domain         | 100%     | 100%   | Entidades, `Address`, `TokenHasher`       |
+| Application    | 98.9%    | 96.4%  | Services — core do negócio                |
+| API            | 96.6%    | 95.4%  | Controllers + Middleware                  |
+| Domain         | 100%     | —      | Entidades, `Address`, `TokenHasher`       |
 | Infrastructure | excluída | —      | Candidata a testes de integração          |
 | CrossCutting   | excluída | —      | DI composition root — sem lógica testável |
 
