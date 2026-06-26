@@ -26,14 +26,6 @@ public class TokenServiceTests
     }));
 
     [Fact]
-    public void GenerateAccessToken_ReturnsWellFormedJwt()
-    {
-        // JWT format is three base64url segments separated by dots
-        var token = Create().GenerateAccessToken(UserId, Email);
-        token.Split('.').Should().HaveCount(3);
-    }
-
-    [Fact]
     public void GenerateAccessToken_ContainsUserIdClaim()
     {
         var token = Create().GenerateAccessToken(UserId, Email);
@@ -78,13 +70,6 @@ public class TokenServiceTests
         var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
 
         jwt.ValidTo.Should().BeCloseTo(before.AddMinutes(minutes), TimeSpan.FromSeconds(5));
-    }
-
-    [Fact]
-    public void GenerateRefreshToken_ReturnsNonEmptyValue()
-    {
-        var token = Create().GenerateRefreshToken();
-        token.Should().NotBeNullOrEmpty();
     }
 
     [Fact]

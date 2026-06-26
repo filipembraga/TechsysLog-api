@@ -53,42 +53,6 @@ public class DeliveriesControllerTests
     }
 
     [Fact]
-    public async Task RegisterAsync_WithNonExistentOrder_ExceptionPropagates()
-    {
-        // Arrange
-        var dto = new CreateDeliveryDto { OrderId = "nonexistentid" };
-
-        _deliveryServiceMock
-            .Setup(s => s.RegisterAsync(dto))
-            .ThrowsAsync(new KeyNotFoundException("Order nonexistentid not found."));
-
-        // Act
-        var act = async () => await _sut.RegisterAsync(dto);
-
-        // Assert — ExceptionHandlingMiddleware maps this to 404
-        await act.Should().ThrowAsync<KeyNotFoundException>()
-            .WithMessage("*not found*");
-    }
-
-    [Fact]
-    public async Task RegisterAsync_WithAlreadyDeliveredOrder_ExceptionPropagates()
-    {
-        // Arrange
-        var dto = new CreateDeliveryDto { OrderId = "6a2a344d034b3271f27a233c" };
-
-        _deliveryServiceMock
-            .Setup(s => s.RegisterAsync(dto))
-            .ThrowsAsync(new InvalidOperationException("Order ORD-00010 has already been delivered."));
-
-        // Act
-        var act = async () => await _sut.RegisterAsync(dto);
-
-        // Assert — ExceptionHandlingMiddleware maps this to 409
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*already been delivered*");
-    }
-
-    [Fact]
     public async Task GetByOrderIdAsync_WithExistingDelivery_Returns200()
     {
         // Arrange

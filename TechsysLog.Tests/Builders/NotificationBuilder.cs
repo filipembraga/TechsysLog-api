@@ -13,11 +13,13 @@ public class NotificationBuilder
     private string _orderId = "6a2a344d034b3271f27a233c";
     private NotificationType _type = NotificationType.OrderRegistered;
     private bool _isRead = false;
+    private DateTime? _readAt = null;
 
     public NotificationBuilder WithId(string id) { _id = id; return this; }
     public NotificationBuilder WithMessage(string message) { _message = message; return this; }
     public NotificationBuilder WithType(NotificationType type) { _type = type; return this; }
     public NotificationBuilder AsRead() { _isRead = true; return this; }
+    public NotificationBuilder WithReadAt(DateTime? readAt) { _readAt = readAt; return this; }
 
     public Notification Build() => new()
     {
@@ -26,6 +28,7 @@ public class NotificationBuilder
         OrderId = _orderId,
         Type = _type,
         IsRead = _isRead,
+        ReadAt = _readAt,
         CreatedAt = DateTime.UtcNow
     };
 }

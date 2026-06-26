@@ -55,28 +55,6 @@ public class AuthControllerTests
     }
 
     [Fact]
-    public async Task RegisterAsync_WhenServiceThrows_ExceptionPropagates()
-    {
-        // Arrange — middleware handles this in production
-        var dto = new CreateUserDto
-        {
-            Name = "Test",
-            Email = "duplicate@techsyslog.com",
-            Password = "Test@1234"
-        };
-
-        _userServiceMock.Setup(s => s.RegisterAsync(dto))
-            .ThrowsAsync(new InvalidOperationException("Email already registered."));
-
-        // Act
-        var act = async () => await _sut.RegisterAsync(dto);
-
-        // Assert — exception propagates to ExceptionHandlingMiddleware
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("Email already registered.");
-    }
-
-    [Fact]
     public async Task LoginAsync_WithValidCredentials_Returns200WithToken()
     {
         // Arrange

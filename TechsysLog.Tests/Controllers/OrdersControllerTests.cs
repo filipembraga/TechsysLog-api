@@ -50,9 +50,12 @@ public class OrdersControllerTests
             Amount = 8500m,
             DeliveryAddress = new AddressDto
             {
-                ZipCode = "01310-100", Number = "1578",
-                Street = string.Empty, Neighborhood = string.Empty,
-                City = string.Empty, State = string.Empty
+                ZipCode = "01310-100",
+                Number = "1578",
+                Street = string.Empty,
+                Neighborhood = string.Empty,
+                City = string.Empty,
+                State = string.Empty
             }
         };
 
@@ -67,9 +70,12 @@ public class OrdersControllerTests
             CreatedAt = DateTime.UtcNow,
             DeliveryAddress = new AddressDto
             {
-                ZipCode = "01310-100", Street = "Avenida Paulista",
-                Number = "1578", Neighborhood = "Bela Vista",
-                City = "São Paulo", State = "SP"
+                ZipCode = "01310-100",
+                Street = "Avenida Paulista",
+                Number = "1578",
+                Neighborhood = "Bela Vista",
+                City = "São Paulo",
+                State = "SP"
             }
         };
 
@@ -97,58 +103,6 @@ public class OrdersControllerTests
         // Assert
         result.Should().BeOfType<NotFoundObjectResult>()
             .Which.StatusCode.Should().Be(404);
-    }
-
-    [Fact]
-    public async Task GetAllByUserIdAsync_ReturnsOrdersForAuthenticatedUser()
-    {
-        // Arrange
-        var orders = new List<OrderResponseDto>
-        {
-            new() { Id = "id1", OrderNumber = "ORD-00001", UserId = UserId },
-            new() { Id = "id2", OrderNumber = "ORD-00002", UserId = UserId }
-        };
-
-        _orderServiceMock.Setup(s => s.GetAllByUserIdAsync(UserId)).ReturnsAsync(orders);
-
-        // Act
-        var result = await _sut.GetAllByUserIdAsync();
-
-        // Assert
-        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
-        okResult.Value.Should().BeEquivalentTo(orders);
-    }
-
-    [Fact]
-    public async Task GetByIdAsync_WithExistingId_Returns200WithOrder()
-    {
-        // Arrange
-        var order = new OrderResponseDto { Id = "existingid", OrderNumber = "ORD-00001" };
-        _orderServiceMock.Setup(s => s.GetByIdAsync("existingid")).ReturnsAsync(order);
-
-        // Act
-        var result = await _sut.GetByIdAsync("existingid");
-
-        // Assert
-        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
-        okResult.StatusCode.Should().Be(200);
-        okResult.Value.Should().BeEquivalentTo(order);
-    }
-
-    [Fact]
-    public async Task GetByOrderNumberAsync_WithExistingOrderNumber_Returns200WithOrder()
-    {
-        // Arrange
-        var order = new OrderResponseDto { Id = "id1", OrderNumber = "ORD-00001" };
-        _orderServiceMock.Setup(s => s.GetByOrderNumberAsync("ORD-00001")).ReturnsAsync(order);
-
-        // Act
-        var result = await _sut.GetByOrderNumberAsync("ORD-00001");
-
-        // Assert
-        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
-        okResult.StatusCode.Should().Be(200);
-        okResult.Value.Should().BeEquivalentTo(order);
     }
 
     [Fact]

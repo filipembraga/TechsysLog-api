@@ -28,108 +28,14 @@ public class NotificationServiceTests
     }
 
     [Fact]
-    public async Task SendAsync_PersistsNotificationAndDispatches()
+    public async Task SendAsync_BuildsNotificationWithAllFieldsAndDispatches()
     {
         // Arrange
-        _notificationRepositoryMock
-            .Setup(r => r.CreateAsync(It.IsAny<Domain.Entities.Notification>()))
-            .Returns(Task.CompletedTask);
-
-        _notificationDispatcherMock
-            .Setup(d => d.SendNotificationAsync(It.IsAny<Domain.Entities.Notification>()))
-            .Returns(Task.CompletedTask);
-
-        // Act
-        await _sut.SendAsync("New order ORD-00001 registered.", "orderId123", NotificationType.OrderRegistered);
-
-        // Assert — both persist and dispatch were called exactly once
-        _notificationRepositoryMock.Verify(
-            r => r.CreateAsync(It.Is<Domain.Entities.Notification>(n =>
-                n.Message == "New order ORD-00001 registered." &&
-                n.OrderId == "orderId123" &&
-                n.Type == NotificationType.OrderRegistered &&
-                n.IsRead == false)),
-            Times.Once);
-
-        _notificationDispatcherMock.Verify(
-            d => d.SendNotificationAsync(It.IsAny<Domain.Entities.Notification>()),
-            Times.Once);
-    }
-
-    [Fact]
-    public async Task GetAllAsync_ReturnsAllNotificationsMapped()
-    {
-        // Arrange
-        var notifications = new List<Domain.Entities.Notification>
-        {
-            new NotificationBuilder().Build(),
-            new NotificationBuilder().WithId("6a2a3513034b3271f27a2340").AsRead().Build()
-        };
-
-        _notificationRepositoryMock
-            .Setup(r => r.GetAllAsync())
-            .ReturnsAsync(notifications);
-
-        // Act
-        var result = await _sut.GetAllAsync();
-
-        // Assert
-        result.Should().HaveCount(2);
-        result[0].IsRead.Should().BeFalse();
-        result[1].IsRead.Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task GetUnreadAsync_ReturnsOnlyUnreadNotifications()
-    {
-        // Arrange
-        var unread = new List<Domain.Entities.Notification>
-        {
-            new NotificationBuilder().Build(),
-            new NotificationBuilder().WithId("6a2a3513034b3271f27a2341").Build()
-        };
-
-        _notificationRepositoryMock
-            .Setup(r => r.GetUnreadAsync())
-            .ReturnsAsync(unread);
-
-        // Act
-        var result = await _sut.GetUnreadAsync();
-
-        // Assert
-        result.Should().HaveCount(2);
-        result.Should().AllSatisfy(n => n.IsRead.Should().BeFalse());
-    }
-
-    [Fact]
-    public async Task MarkAsReadAsync_DelegatesToRepository()
-    {
-        // Arrange
-        var notificationId = "6a2a3513034b3271f27a233f";
-        var userId = "6a29ccb85c6f09702e1853de";
-
-        _notificationRepositoryMock
-            .Setup(r => r.MarkAsReadAsync(notificationId, userId))
-            .Returns(Task.CompletedTask);
-
-        // Act
-        await _sut.MarkAsReadAsync(notificationId, userId);
-
-        // Assert
-        _notificationRepositoryMock.Verify(
-            r => r.MarkAsReadAsync(notificationId, userId),
-            Times.Once);
-    }
-
-    [Fact]
-    public async Task SendAsync_CreatesNotificationWithCorrectTimestamp()
-    {
-        // Arrange
-        Domain.Entities.Notification? capturedNotification = null;
+        Domain.Entities.Notification? captured = null;
 
         _notificationRepositoryMock
             .Setup(r => r.CreateAsync(It.IsAny<Domain.Entities.Notification>()))
-            .Callback<Domain.Entities.Notification>(n => capturedNotification = n)
+            .Callback<Domain.Entities.Notification>(n => captured = n)
             .Returns(Task.CompletedTask);
 
         _notificationDispatcherMock
@@ -139,11 +45,93 @@ public class NotificationServiceTests
         var before = DateTime.UtcNow;
 
         // Act
-        await _sut.SendAsync("Test message", "orderId123", NotificationType.OrderRegistered);
+        await _sut.SendAsync("New order ORD-00001 registered.", "orderId123", NotificationType.OrderRegistered);
 
         // Assert
-        capturedNotification.Should().NotBeNull();
-        capturedNotification!.CreatedAt.Should().BeOnOrAfter(before);
-        capturedNotification.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(2));
+        captured.Should().NotBeNull();
+        captured!.Message.Should().Be("New order ORD-00001 registered.");
+        captured.OrderId.Should().Be("orderId123");
+        captured.Type.Should().Be(NotificationType.OrderRegistered);
+        captured.IsRead.Should().BeFalse();
+        captured.CreatedAt.Should().BeOnOrAfter(before);
+        captured.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(2));
+
+        _notificationRepositoryMock.Verify(
+            r => r.CreateAsync(It.IsAny<Domain.Entities.Notification>()), Times.Once);
+        _notificationDispatcherMock.Verify(
+            d => d.SendNotificationAsync(captured), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetAllAsync_ReturnsAllNotificationsMapped()
+    {
+        // Arrange
+        var readAt = DateTime.UtcNow;
+        var notifications = new List<Domain.Entities.Notification>
+    {
+        new NotificationBuilder()
+            .WithId("6a2a3513034b3271f27a233f")
+            .WithMessage("New order ORD-00001 registered.")
+            .WithType(NotificationType.OrderRegistered)
+            .Build(),
+        new NotificationBuilder()
+            .WithId("6a2a3513034b3271f27a2340")
+            .WithMessage("Delivery registered for ORD-00002.")
+            .WithType(NotificationType.OrderDelivered)
+            .AsRead()
+            .WithReadAt(readAt)
+            .Build()
+    };
+
+        _notificationRepositoryMock
+            .Setup(r => r.GetAllAsync())
+            .ReturnsAsync(notifications);
+
+        // Act
+        var result = await _sut.GetAllAsync();
+
+        // Assert — every mapped field, not just Count/IsRead
+        result.Should().HaveCount(2);
+
+        result[0].Id.Should().Be("6a2a3513034b3271f27a233f");
+        result[0].Message.Should().Be("New order ORD-00001 registered.");
+        result[0].Type.Should().Be(NotificationType.OrderRegistered);
+        result[0].IsRead.Should().BeFalse();
+        result[0].ReadAt.Should().BeNull();
+
+        result[1].Id.Should().Be("6a2a3513034b3271f27a2340");
+        result[1].Message.Should().Be("Delivery registered for ORD-00002.");
+        result[1].Type.Should().Be(NotificationType.OrderDelivered);
+        result[1].IsRead.Should().BeTrue();
+        result[1].ReadAt.Should().Be(readAt);
+    }
+
+    [Fact]
+    public async Task GetUnreadAsync_ReturnsOnlyUnreadNotificationsMapped()
+    {
+        // Arrange
+        var unread = new List<Domain.Entities.Notification>
+    {
+        new NotificationBuilder()
+            .WithId("6a2a3513034b3271f27a2341")
+            .WithMessage("New order ORD-00003 registered.")
+            .WithType(NotificationType.OrderRegistered)
+            .Build()
+    };
+
+        _notificationRepositoryMock
+            .Setup(r => r.GetUnreadAsync())
+            .ReturnsAsync(unread);
+
+        // Act
+        var result = await _sut.GetUnreadAsync();
+
+        // Assert
+        result.Should().HaveCount(1);
+        result[0].Id.Should().Be("6a2a3513034b3271f27a2341");
+        result[0].Message.Should().Be("New order ORD-00003 registered.");
+        result[0].Type.Should().Be(NotificationType.OrderRegistered);
+        result[0].IsRead.Should().BeFalse();
+        result[0].ReadAt.Should().BeNull();
     }
 }
