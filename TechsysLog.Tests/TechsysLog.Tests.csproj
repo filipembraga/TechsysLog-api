@@ -31,4 +31,12 @@
     <ProjectReference Include="..\TechsysLog.API\TechsysLog.API.csproj" />
   </ItemGroup>
 
+  <Target Name="Coverage">
+    <RemoveDir Directories="TestResults" Condition="Exists('TestResults')" />
+    <Exec Command="dotnet test --collect:&quot;XPlat Code Coverage&quot; --settings ../coverage.runsettings" />
+    <Exec Command="dotnet tool run reportgenerator -reports:&quot;TestResults/**/coverage.cobertura.xml&quot; -targetdir:&quot;../coveragereport&quot; -reporttypes:Html" />
+    <Exec Command="open ../coveragereport/index.html" Condition="'$(OS)' == 'Unix'" />
+    <Exec Command="start ../coveragereport/index.html" Condition="'$(OS)' == 'Windows_NT'" />
+  </Target>
+
 </Project>
