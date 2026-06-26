@@ -154,6 +154,8 @@ _TeamCity*
 !.axoCover/settings.json
 
 # Coverlet is a free, cross platform Code Coverage Tool
+coverage/
+coveragereport/
 coverage*.json
 coverage*.xml
 coverage*.info
@@ -484,3 +486,4 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 .vscode/
+coveragereport/

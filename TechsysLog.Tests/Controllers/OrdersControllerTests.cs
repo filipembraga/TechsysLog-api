@@ -91,6 +91,18 @@ public class OrdersControllerTests
     }
 
     [Fact]
+    public async Task GetByIdAsync_WithExistingId_ReturnsOkWithOrder()
+    {
+        var order = new OrderResponseDto { Id = "existingid", OrderNumber = "ORD-00001" };
+        _orderServiceMock.Setup(s => s.GetByIdAsync("existingid")).ReturnsAsync(order);
+
+        var result = await _sut.GetByIdAsync("existingid");
+
+        result.Should().BeOfType<OkObjectResult>()
+            .Which.Value.Should().BeEquivalentTo(order);
+    }
+
+    [Fact]
     public async Task GetByIdAsync_WithNonExistentId_Returns404()
     {
         // Arrange
@@ -103,6 +115,18 @@ public class OrdersControllerTests
         // Assert
         result.Should().BeOfType<NotFoundObjectResult>()
             .Which.StatusCode.Should().Be(404);
+    }
+
+    [Fact]
+    public async Task GetByOrderNumberAsync_WithExistingOrderNumber_ReturnsOkWithOrder()
+    {
+        var order = new OrderResponseDto { Id = "id1", OrderNumber = "ORD-00001" };
+        _orderServiceMock.Setup(s => s.GetByOrderNumberAsync("ORD-00001")).ReturnsAsync(order);
+
+        var result = await _sut.GetByOrderNumberAsync("ORD-00001");
+
+        result.Should().BeOfType<OkObjectResult>()
+            .Which.Value.Should().BeEquivalentTo(order);
     }
 
     [Fact]
