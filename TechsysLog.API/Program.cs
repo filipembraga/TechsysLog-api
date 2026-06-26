@@ -9,6 +9,7 @@ using Scalar.AspNetCore;
 using TechsysLog.API.Middleware;
 using TechsysLog.Application.Settings;
 using TechsysLog.CrossCutting;
+using TechsysLog.Infrastructure.Context;
 using TechsysLog.Infrastructure.HealthChecks;
 using TechsysLog.Infrastructure.WebSockets.Hubs;
 
@@ -104,6 +105,9 @@ builder.Services.AddHealthChecks()
 
 
 var app = builder.Build();
+
+var mongoContext = app.Services.GetRequiredService<MongoDbContext>();
+await mongoContext.EnsureIndexesCreatedAsync();
 
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();

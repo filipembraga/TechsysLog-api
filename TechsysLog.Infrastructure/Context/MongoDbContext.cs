@@ -17,8 +17,6 @@ public class MongoDbContext
     {
         Client = new MongoClient(settings.Value.ConnectionString);
         _database = Client.GetDatabase(settings.Value.DatabaseName);
-
-        CreateIndexes();
     }
 
     public IMongoCollection<User> Users => _database.GetCollection<User>("Users");
@@ -27,33 +25,33 @@ public class MongoDbContext
     public IMongoCollection<Delivery> Deliveries => _database.GetCollection<Delivery>("Deliveries");
     public IMongoCollection<RefreshToken> RefreshTokens => _database.GetCollection<RefreshToken>("RefreshTokens");
 
-    private void CreateIndexes()
+    public async Task EnsureIndexesCreatedAsync()
     {
         var emailIndex = Builders<User>.IndexKeys.Ascending(u => u.Email);
-        Users.Indexes.CreateOne(new CreateIndexModel<User>(
+        await Users.Indexes.CreateOneAsync(new CreateIndexModel<User>(
             emailIndex,
             new CreateIndexOptions { Unique = true }));
 
         var orderNumberIndex = Builders<Order>.IndexKeys.Ascending(o => o.OrderNumber);
-        Orders.Indexes.CreateOne(new CreateIndexModel<Order>(
+        await Orders.Indexes.CreateOneAsync(new CreateIndexModel<Order>(
             orderNumberIndex,
             new CreateIndexOptions { Unique = true }));
 
         var notificationOrderIdIndex = Builders<Notification>.IndexKeys.Ascending(n => n.OrderId);
-        Notifications.Indexes.CreateOne(new CreateIndexModel<Notification>(
+        await Notifications.Indexes.CreateOneAsync(new CreateIndexModel<Notification>(
             notificationOrderIdIndex));
 
         var deliveryOrderIdIndex = Builders<Delivery>.IndexKeys.Ascending(d => d.OrderId);
-        Deliveries.Indexes.CreateOne(new CreateIndexModel<Delivery>(
+        await Deliveries.Indexes.CreateOneAsync(new CreateIndexModel<Delivery>(
             deliveryOrderIdIndex));
 
         var refreshTokenHashIndex = Builders<RefreshToken>.IndexKeys.Ascending(t => t.TokenHash);
-        RefreshTokens.Indexes.CreateOne(new CreateIndexModel<RefreshToken>(
+        await RefreshTokens.Indexes.CreateOneAsync(new CreateIndexModel<RefreshToken>(
             refreshTokenHashIndex,
             new CreateIndexOptions { Unique = true }));
 
         var refreshTokenExpiryIndex = Builders<RefreshToken>.IndexKeys.Ascending(t => t.ExpiresAt);
-        RefreshTokens.Indexes.CreateOne(new CreateIndexModel<RefreshToken>(
+        await RefreshTokens.Indexes.CreateOneAsync(new CreateIndexModel<RefreshToken>(
             refreshTokenExpiryIndex,
             new CreateIndexOptions { ExpireAfter = TimeSpan.Zero }));
     }
