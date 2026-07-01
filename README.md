@@ -289,43 +289,65 @@ TechsysLog/
 
 ## Como Executar
 
-### Pré-requisitos
+### Opção 1 — Docker Compose (recomendado)
 
-- [.NET 10 SDK](https://dot.net)
-- [Git](https://git-scm.com)
-- Cluster [MongoDB Atlas](https://www.mongodb.com/atlas) gratuito (M0) ou instância local
+Sobe o stack completo (API + frontend + MongoDB local) com um único comando.
 
-### Passos
+**Pré-requisitos**
 
-**1. Clonar o repositório**
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- Ambos os repositórios clonados como irmãos:
+
+Dev/
+├── TechsysLog-api/
+└── TechsysLog-frontend/
+
+**Passos**
 
 ```bash
-git clone https://github.com/filipembraga/TechsysLog.git
-cd TechsysLog
+git clone https://github.com/filipembraga/TechsysLog-api.git
+# clone o frontend como irmão:
+git clone https://github.com/filipembraga/TechsysLog-frontend.git
+
+cd TechsysLog-api
+cp .env.example .env
+# edite .env e preencha JWT_SECRET com qualquer string de 32+ caracteres
+
+docker compose up --build
 ```
 
-**2. Configurar segredos locais**
+| Serviço   | URL                             |
+| --------- | ------------------------------- |
+| Frontend  | http://localhost:3000           |
+| API       | http://localhost:8080           |
+| Scalar UI | http://localhost:8080/scalar/v1 |
+
+> O banco de dados MongoDB é criado automaticamente com todas as collections e índices na primeira execução.
+
+---
+
+### Opção 2 — API isolada (`dotnet run`)
+
+Para rodar só o backend contra MongoDB Atlas, sem Docker.
+
+**Pré-requisitos**
+
+- [.NET 10 SDK](https://dot.net)
+- Cluster [MongoDB Atlas](https://www.mongodb.com/atlas) gratuito (M0)
+
+**Passos**
 
 ```bash
-dotnet user-secrets init --project TechsysLog.API
+git clone https://github.com/filipembraga/TechsysLog-api.git
+cd TechsysLog-api
 
 dotnet user-secrets set "MongoDb:ConnectionString" "sua-connection-string" --project TechsysLog.API
 dotnet user-secrets set "Jwt:Secret" "sua-chave-secreta-minimo-32-caracteres" --project TechsysLog.API
-```
 
-> O banco de dados e as collections são criados automaticamente na primeira escrita. Não é necessária configuração manual no Atlas.
-
-**3. Executar a API**
-
-```bash
 dotnet run --project TechsysLog.API
 ```
 
-**4. Acessar a documentação**
-
-Abra no navegador: `https://localhost:{porta}/scalar/v1`
-
-A interface Scalar lista todos os endpoints com schemas de request/response e suporta autenticação JWT diretamente na interface.
+Acesse a documentação em `https://localhost:{porta}/scalar/v1`.
 
 ---
 
@@ -672,11 +694,11 @@ Escute o evento `ReceiveNotification` para receber atualizações em tempo real 
 ## O que Ficou de Fora
 
 | Item                       | Motivo                                                                                                                                                                                                                                            |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
 | **Refresh Token Rotation** | (Estratégia sem rotação) implementada — ver [ADR-005](#adr-005--refresh-token-via-cookie-httponly-sem-rotação). Rotação com detecção de reuso avaliada como over-engineering para o estágio atual, mas mapeada para os próximos projetos pessoais |
 | **SignalR por usuário**    | Notificações são broadcast para todos os clientes conectados. Targeting por usuário exigiria SignalR Groups — documentado como próximo passo natural                                                                                              |
 | **Paginação**              | Não implementada dado o volume de dados esperado no contexto do desafio. A arquitetura suporta adição sem breaking changes                                                                                                                        |
-| **Docker**                 | Não exigido pelo desafio, mas a arquitetura suporta containerização sem mudanças em nenhuma camada                                                                                                                                                |
+| **Docker / Compose**       | Implementado — multi-stage Dockerfile + docker-compose com MongoDB local. Ver seção [Como Executar](#como-executar)                                                                                                                               |     |
 | **Testes de integração**   | Infrastructure excluída da cobertura unitária. Testes de integração contra MongoDB real seriam o próximo passo para validar corretude das queries                                                                                                 |
 | **CQRS**                   | Avaliado e rejeitado para este escopo — ver [ADR-004](#adr-004--cqrs-rejeitado)                                                                                                                                                                   |
 | **Cache de CEP com Redis** | ViaCEP é gratuito e rápido — Redis adicionaria dependência operacional sem ganho mensurável no escopo atual. Documentado como próximo passo em Resiliência                                                                                        |
@@ -693,15 +715,29 @@ The frontend client is available at [TechsysLog-frontend](https://github.com/fil
 
 The solution follows **Clean Architecture** with four independent layers: **Domain** (entities, value objects, repository interfaces — no external dependencies), **Application** (services, DTOs, service interfaces), **Infrastructure** (MongoDB repositories, ViaCEP HTTP client, SignalR dispatcher), and **CrossCutting** (the composition root — the only project aware of all layers). The **API** references only Application and CrossCutting, never Infrastructure directly.
 
-KKey decisions documented as ADRs: MongoDB over SQL ([ADR-001](#adr-001--mongodb-sobre-sql)), SignalR over polling with transport abstraction via `INotificationDispatcher` ([ADR-002](#adr-002--signalr-sobre-polling)), sequential order numbers (`ORD-00001`) over GUIDs ([ADR-003](#adr-003--número-de-pedido-sequencial-sobre-guid)), CQRS rejected as premature ([ADR-004](#adr-004--cqrs-rejeitado)), and a short-lived JWT access token paired with an httpOnly refresh token cookie, without rotation ([ADR-005](#adr-005--refresh-token-via-cookie-httponly-sem-rotação)).
+Key decisions documented as ADRs: MongoDB over SQL ([ADR-001](#adr-001--mongodb-sobre-sql)), SignalR over polling with transport abstraction via `INotificationDispatcher` ([ADR-002](#adr-002--signalr-sobre-polling)), sequential order numbers (`ORD-00001`) over GUIDs ([ADR-003](#adr-003--número-de-pedido-sequencial-sobre-guid)), CQRS rejected as premature ([ADR-004](#adr-004--cqrs-rejeitado)), and a short-lived JWT access token paired with an httpOnly refresh token cookie, without rotation ([ADR-005](#adr-005--refresh-token-via-cookie-httponly-sem-rotação)).
 
 Observability additions post-challenge: `CorrelationIdMiddleware` for per-request traceability via `X-Correlation-Id` header and log scope propagation; health check endpoints (`/health`, `/health/ready`) with MongoDB readiness probe implemented as `IHealthCheck` in the Infrastructure layer.
 
 ### Running
 
+**Docker Compose (recommended)** — runs the full stack (API + frontend + local MongoDB):
+
 ```bash
-git clone https://github.com/filipembraga/TechsysLog.git
-cd TechsysLog
+git clone https://github.com/filipembraga/TechsysLog-api.git
+git clone https://github.com/filipembraga/TechsysLog-frontend.git  # clone as sibling
+cd TechsysLog-api
+cp .env.example .env  # fill in JWT_SECRET (32+ chars)
+docker compose up --build
+```
+
+Frontend: http://localhost:3000 · API: http://localhost:8080 · Scalar UI: http://localhost:8080/scalar/v1
+
+**API only** — against MongoDB Atlas, without Docker:
+
+```bash
+git clone https://github.com/filipembraga/TechsysLog-api.git
+cd TechsysLog-api
 dotnet user-secrets set "MongoDb:ConnectionString" "your-connection-string" --project TechsysLog.API
 dotnet user-secrets set "Jwt:Secret" "your-secret-minimum-32-chars" --project TechsysLog.API
 dotnet run --project TechsysLog.API
@@ -712,7 +748,7 @@ Access the Scalar UI at `https://localhost:{port}/scalar/v1`.
 ### Tests
 
 ```bash
-dotnet test  # 60 tests — Application 98.2%, API 100%, Domain 100%
+dotnet test  # 67 tests — Application 98.9%, API 100%, Domain 100%
 ```
 
 Unit tests cover Application services (Moq) and API controllers (injected `ClaimsPrincipal`). Infrastructure is excluded from unit test coverage — integration tests against a real MongoDB instance are the natural next step.
