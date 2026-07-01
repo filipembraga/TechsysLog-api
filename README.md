@@ -297,11 +297,11 @@ Sobe o stack completo (API + frontend + MongoDB local) com um único comando.
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - Ambos os repositórios clonados como irmãos:
-
+```
 Dev/
 ├── TechsysLog-api/
 └── TechsysLog-frontend/
-
+```
 **Passos**
 
 ```bash
