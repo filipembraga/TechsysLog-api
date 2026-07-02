@@ -112,6 +112,7 @@ builder.Services.AddOpenTelemetry()
             serviceVersion: "1.0.0"))
     .WithTracing(tracing => tracing
         .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
         .AddConsoleExporter());
 
 var app = builder.Build();
